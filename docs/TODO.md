@@ -115,11 +115,11 @@
 - [x] 8-12: 最終カバレッジ確認（80%以上） → 80.54% 達成
 
 ## Phase 9: デプロイ
-- [ ] 9-1: GitHub リポジトリ作成 + 初回コミット・プッシュ
-- [ ] 9-2: .gitignore 最終確認（秘匿情報が含まれていないこと）
-- [ ] 9-3: Supabase プロジェクト作成 + PostgreSQL 接続設定
-- [ ] 9-4: Prisma マイグレーションを Supabase に適用
-- [ ] 9-5: Vercel プロジェクト作成 + GitHub リポジトリ連携
-- [ ] 9-6: Vercel 環境変数設定（DATABASE_URL, DIRECT_URL など）
-- [ ] 9-7: Vercel デプロイ実行・動作確認
-- [ ] 9-8: README.md にデプロイ済みURLを追記
+- [x] 9-1: GitHub リポジトリ作成 + 初回コミット・プッシュ → https://github.com/masahiro-sakane/everyones-molkky
+- [x] 9-2: .gitignore 最終確認（秘匿情報が含まれていないこと）
+- [x] 9-3: Supabase プロジェクト作成 + PostgreSQL 接続設定
+- [x] 9-4: Prisma マイグレーションを Supabase に適用
+- [x] 9-5: Vercel プロジェクト作成 + GitHub リポジトリ連携
+- [x] 9-6: Vercel 環境変数設定（DATABASE_URL, DIRECT_URL など）
+- [x] 9-7: Vercel デプロイ実行・動作確認 → https://everyones-molkky.vercel.app
+- [x] 9-8: README.md にデプロイ済みURLを追記
