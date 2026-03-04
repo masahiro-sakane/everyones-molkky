@@ -166,6 +166,43 @@ export function useMatch(match: MatchData) {
     }
   }, [match.status, match.matchTeams, currentSet])
 
+  // 次の投擲者を特定
+  const nextThrower = useMemo<CurrentThrowerInfo | null>(() => {
+    if (match.status !== 'IN_PROGRESS') return null
+
+    const turns = currentSet?.turns ?? []
+    const latestTurn = turns.at(-1)
+    if (!latestTurn) return null
+
+    const teamCount = match.matchTeams.length
+    const disqualifiedIds = new Set(
+      (match.teamSetScores ?? []).filter((s) => s.isDisqualified).map((s) => s.teamId)
+    )
+
+    // 失格チームをスキップして次のチームを探す
+    let nextTurnNumber = latestTurn.turnNumber + 1
+    for (let i = 0; i < teamCount; i++) {
+      const teamIndex = (nextTurnNumber - 1) % teamCount
+      const nextMatchTeam = match.matchTeams.find((mt) => mt.order === teamIndex + 1)
+      if (nextMatchTeam && !disqualifiedIds.has(nextMatchTeam.teamId)) {
+        const team = nextMatchTeam.team
+        const members = team.members
+        const memberIndex = Math.floor((nextTurnNumber - 1) / teamCount) % Math.max(members.length, 1)
+        const thrower = members[memberIndex] ?? members[0]
+        return {
+          teamId: team.id,
+          teamName: team.name,
+          teamOrder: nextMatchTeam.order,
+          totalTeams: teamCount,
+          userId: thrower?.userId ?? '',
+          userName: thrower?.user.name ?? 'メンバーなし',
+        }
+      }
+      nextTurnNumber++
+    }
+    return null
+  }, [match.status, match.matchTeams, match.teamSetScores, currentSet])
+
   // 投擲履歴（全ターンをフラット化）
   const throwHistory = useMemo<ThrowHistoryEntry[]>(() => {
     const turns = currentSet?.turns ?? []
@@ -199,6 +236,7 @@ export function useMatch(match: MatchData) {
     currentSet,
     teamScores,
     currentThrower,
+    nextThrower,
     throwHistory,
     winnerTeamId,
     newlyDisqualifiedTeams,

@@ -61,14 +61,22 @@ export function SkittleInput({
 
   const handleClear = () => setSelected(new Set())
 
+  const handleSelectAll = useCallback(() => {
+    if (disabled) return
+    const allNums = SKITTLE_LAYOUT.flat()
+    setSelected(new Set(allNums))
+  }, [disabled])
+
   const knocked = Array.from(selected)
   const previewScore = calculateThrowScore(knocked)
+  const allSkittles = SKITTLE_LAYOUT.flat()
+  const isAllSelected = allSkittles.every((n) => selected.has(n))
 
   return (
     <div className="flex flex-col gap-4" role="group" aria-label="スキットル選択">
       {/* スキットル配置図 */}
       <div
-        className="flex flex-col-reverse items-center gap-3 py-4 px-2 bg-neutral-100 rounded-xl border border-neutral-200"
+        className="relative flex flex-col-reverse items-center gap-3 py-4 px-2 bg-neutral-100 rounded-xl border border-neutral-200"
         aria-label="スキットルの配置（手前が投擲側）"
       >
         {SKITTLE_LAYOUT.map((row, rowIdx) => (
@@ -91,6 +99,24 @@ export function SkittleInput({
           <span>投擲ライン</span>
           <div className="flex-1 border-t-2 border-dashed border-neutral-300" />
         </div>
+
+        {/* 全選択ボタン（右下） */}
+        <button
+          type="button"
+          onClick={isAllSelected ? handleClear : handleSelectAll}
+          disabled={disabled}
+          aria-label={isAllSelected ? '全選択を解除' : '全スキットルを選択'}
+          className={[
+            'absolute bottom-2 right-2',
+            'px-2 py-1 rounded text-xs font-medium border transition-colors',
+            isAllSelected
+              ? 'bg-brand-100 border-brand-400 text-brand-700 hover:bg-brand-200'
+              : 'bg-neutral-0 border-neutral-300 text-neutral-600 hover:border-brand-400 hover:text-brand-600',
+            'disabled:opacity-40 disabled:cursor-not-allowed',
+          ].join(' ')}
+        >
+          {isAllSelected ? '全解除' : '全選択'}
+        </button>
       </div>
 
       {/* 選択状態と得点プレビュー */}

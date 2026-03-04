@@ -27,7 +27,7 @@ export async function getTeamById(id: string) {
 
 export async function listTeams() {
   return db.team.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { name: 'asc' },
     include: {
       members: {
         include: { user: true },

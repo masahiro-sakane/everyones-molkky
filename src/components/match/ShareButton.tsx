@@ -12,16 +12,36 @@ export function ShareButton({ shareCode }: ShareButtonProps) {
 
   const shareUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/matches/${shareCode}`
-      : `/matches/${shareCode}`
+      ? `${window.location.origin}/matches/${shareCode}/watch`
+      : `/matches/${shareCode}/watch`
 
   const handleCopy = async () => {
+    // Web Share API（iOS Safari など）
+    if (navigator.share) {
+      try {
+        await navigator.share({ url: shareUrl })
+        return
+      } catch {
+        // キャンセルされた場合は何もしない
+        return
+      }
+    }
+
+    // Clipboard API
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // clipboard API not available
+      // フォールバック: execCommand
+      const input = document.createElement('input')
+      input.value = shareUrl
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
   }
 

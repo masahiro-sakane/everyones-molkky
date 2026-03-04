@@ -3,6 +3,8 @@ type CurrentThrowerProps = {
   throwerName: string
   teamOrder: number
   totalTeams: number
+  nextTeamName?: string
+  nextThrowerName?: string
 }
 
 export function CurrentThrower({
@@ -10,6 +12,8 @@ export function CurrentThrower({
   throwerName,
   teamOrder,
   totalTeams,
+  nextTeamName,
+  nextThrowerName,
 }: CurrentThrowerProps) {
   return (
     <div
@@ -29,8 +33,16 @@ export function CurrentThrower({
           <p className="text-xs text-neutral-500">{teamName}</p>
         </div>
       </div>
-      <div className="text-right text-xs text-neutral-400">
-        チーム {teamOrder} / {totalTeams}
+      <div className="text-right">
+        <p className="text-xs text-neutral-400">
+          チーム {teamOrder} / {totalTeams}
+        </p>
+        {nextTeamName && nextThrowerName && (
+          <p className="text-xs text-neutral-400 mt-1">
+            次: <span className="text-neutral-600">{nextThrowerName}</span>
+            <span className="ml-1 text-neutral-400">({nextTeamName})</span>
+          </p>
+        )}
       </div>
     </div>
   )

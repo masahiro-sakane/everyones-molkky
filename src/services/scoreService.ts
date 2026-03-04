@@ -13,6 +13,7 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     const match = await tx.match.findUnique({
       where: { shareCode },
       include: {
+        matchTeams: { orderBy: { order: 'asc' } },
         sets: {
           where: { status: 'IN_PROGRESS' },
           orderBy: { setNumber: 'desc' },
@@ -83,20 +84,48 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
       },
     })
 
-    // 勝利判定
-    if (throwResult.isWinner) {
+    // 全チームのスコアを取得（失格チーム判定用）
+    const allTeamScores = await tx.teamSetScore.findMany({
+      where: { setId: currentSet.id },
+    })
+
+    // 失格していないチームの一覧
+    const activeTeams = allTeamScores.filter((s) => !s.isDisqualified)
+
+    // 勝利判定：50点到達、または失格していないチームが1つのみ残った場合
+    const lastTeamStanding =
+      !throwResult.isWinner && activeTeams.length === 1
+        ? activeTeams[0]
+        : null
+    const winnerId = throwResult.isWinner
+      ? validated.teamId
+      : lastTeamStanding?.teamId ?? null
+
+    if (winnerId) {
       await tx.set.update({
         where: { id: currentSet.id },
-        data: { status: 'FINISHED', winnerId: validated.teamId },
+        data: { status: 'FINISHED', winnerId },
       })
       await tx.match.update({
         where: { id: match.id },
         data: { status: 'FINISHED' },
       })
     } else {
-      // 試合継続：次のターンを作成して投擲者を切り替える
+      // 試合継続：失格チームをスキップして次のターンを作成
+      const teamCount = match.matchTeams.length
+      let nextTurnNumber = currentTurn.turnNumber + 1
+
+      // 失格チームをスキップ（最大でも全チーム数分だけループ）
+      for (let i = 0; i < teamCount; i++) {
+        const teamIndex = (nextTurnNumber - 1) % teamCount
+        const nextMatchTeam = match.matchTeams.find((mt) => mt.order === teamIndex + 1)
+        const nextTeamScore = allTeamScores.find((s) => s.teamId === nextMatchTeam?.teamId)
+        if (!nextTeamScore?.isDisqualified) break
+        nextTurnNumber++
+      }
+
       await tx.turn.create({
-        data: { setId: currentSet.id, turnNumber: currentTurn.turnNumber + 1 },
+        data: { setId: currentSet.id, turnNumber: nextTurnNumber },
       })
     }
 

@@ -23,10 +23,6 @@ export default async function HomePage() {
     <AppLayout>
       {/* Hero */}
       <section className="text-center py-10 px-4">
-        <h1 className="text-3xl font-bold text-neutral-900 mb-2">みんなのモルック</h1>
-        <p className="text-neutral-500 mb-8">
-          フィンランド発祥のスポーツ「モルック」のスコア管理アプリ
-        </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/matches/new">
             <Button variant="primary" size="lg">試合を始める</Button>

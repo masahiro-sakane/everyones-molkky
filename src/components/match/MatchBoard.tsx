@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { useRealtimeScore } from '@/hooks/useRealtimeScore'
@@ -25,6 +25,7 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
   const {
     teamScores,
     currentThrower,
+    nextThrower,
     throwHistory,
     winnerTeamId,
     newlyDisqualifiedTeams,
@@ -32,9 +33,22 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
   } = useMatch(match)
 
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [isThrowerVisible, setIsThrowerVisible] = useState(true)
+
+  const throwerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = throwerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsThrowerVisible(entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const handleRealtimeEvent = useCallback(() => {
-    // SSE イベント受信時に Server Component を再レンダリング
     router.refresh()
   }, [router])
 
@@ -63,6 +77,29 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* スクロール追従ヘッダー（スマホ用・投擲者が見えない時のみ） */}
+      {currentThrower && !isThrowerVisible && (
+        <div className="md:hidden fixed top-14 left-0 right-0 z-30 bg-brand-500 text-neutral-0 px-4 py-2 shadow-md flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div
+              className="w-7 h-7 rounded-full bg-brand-300 text-neutral-0 flex items-center justify-center text-xs font-bold shrink-0"
+              aria-hidden="true"
+            >
+              {currentThrower.userName.charAt(0)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold truncate">{currentThrower.userName}</p>
+              <p className="text-xs opacity-80 truncate">{currentThrower.teamName}</p>
+            </div>
+          </div>
+          {nextThrower && (
+            <p className="text-xs opacity-80 shrink-0">
+              次: {nextThrower.userName}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* 共有 & 接続状態 */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -85,12 +122,16 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
 
       {/* 現在の投擲者 */}
       {currentThrower && (
-        <CurrentThrower
-          teamName={currentThrower.teamName}
-          throwerName={currentThrower.userName}
-          teamOrder={currentThrower.teamOrder}
-          totalTeams={currentThrower.totalTeams}
-        />
+        <div ref={throwerRef}>
+          <CurrentThrower
+            teamName={currentThrower.teamName}
+            throwerName={currentThrower.userName}
+            teamOrder={currentThrower.teamOrder}
+            totalTeams={currentThrower.totalTeams}
+            nextTeamName={nextThrower?.teamName}
+            nextThrowerName={nextThrower?.userName}
+          />
+        </div>
       )}
 
       {/* スコアボード */}
