@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Atlassian Design System inspired design tokens
+   https://atlassian.design/components
+   ============================================================ */
+
+@theme {
+  /* Brand colors (Atlassian Blue) */
+  --color-brand-50:  #E9F2FF;
+  --color-brand-100: #CCE0FF;
+  --color-brand-200: #85B8FF;
+  --color-brand-300: #579DFF;
+  --color-brand-400: #388BFF;
+  --color-brand-500: #0C66E4;
+  --color-brand-600: #0055CC;
+  --color-brand-700: #09326C;
+  --color-brand-800: #1C2B41;
+  --color-brand-900: #0D1F33;
+
+  /* Neutral colors */
+  --color-neutral-0:   #FFFFFF;
+  --color-neutral-100: #F7F8F9;
+  --color-neutral-200: #F1F2F4;
+  --color-neutral-300: #DCDFE4;
+  --color-neutral-400: #B3B9C4;
+  --color-neutral-500: #8590A2;
+  --color-neutral-600: #626F86;
+  --color-neutral-700: #44546F;
+  --color-neutral-800: #2C3E5D;
+  --color-neutral-900: #091E42;
+
+  /* Semantic colors */
+  --color-success-50:  #DCFFF1;
+  --color-success-100: #BAF3DB;
+  --color-success-200: #7EE2B8;
+  --color-success-300: #4BCE97;
+  --color-success-400: #2ABB7F;
+  --color-success-500: #22A06B;
+  --color-success-600: #1F845A;
+  --color-success-700: #216E4E;
+  --color-success-800: #164B35;
+
+  --color-warning-50:  #FFF7D6;
+  --color-warning-100: #F8E6A0;
+  --color-warning-200: #F5CD47;
+  --color-warning-300: #E2B203;
+  --color-warning-400: #CF9F02;
+  --color-warning-500: #B38600;
+  --color-warning-600: #946F00;
+  --color-warning-700: #7F5F01;
+
+  --color-danger-50:  #FFECEB;
+  --color-danger-100: #FFD5D2;
+  --color-danger-200: #FD9891;
+  --color-danger-300: #F87168;
+  --color-danger-400: #EF5C48;
+  --color-danger-500: #E34935;
+  --color-danger-600: #C9372C;
+  --color-danger-700: #AE2E24;
+  --color-danger-800: #5D1F1A;
+
+  /* モルック専用カラー */
+  --color-molkky-pine: #2D5016;
+  --color-molkky-wood: #8B6914;
+  --color-molkky-sky:  #1E6B9E;
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Border radius */
+  --radius-sm:  3px;
+  --radius-md:  4px;
+  --radius-lg:  8px;
+  --radius-xl:  12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(9 30 66 / 8%);
+  --shadow-md: 0 3px 5px 0 rgb(9 30 66 / 12%);
+  --shadow-lg: 0 8px 12px 0 rgb(9 30 66 / 15%);
+  --shadow-xl: 0 18px 28px -4px rgb(9 30 66 / 18%);
+}
+
+/* Base styles */
+:root {
+  --background: var(--color-neutral-100);
+  --foreground: var(--color-neutral-900);
+  --surface: var(--color-neutral-0);
+  --border: var(--color-neutral-300);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-neutral-200);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-400);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neutral-500);
+}

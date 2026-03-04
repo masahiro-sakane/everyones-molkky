@@ -1,0 +1,163 @@
+// みんなのモルック - Prismaスキーマ
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ユーザー
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teamMembers TeamMember[]
+  throws      Throw[]
+
+  @@map("users")
+}
+
+// チーム
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members    TeamMember[]
+  matchTeams MatchTeam[]
+
+  @@map("teams")
+}
+
+// チームメンバー（中間テーブル）
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+// 試合
+model Match {
+  id        String      @id @default(cuid())
+  status    MatchStatus @default(WAITING)
+  shareCode String      @unique @default(cuid())
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  matchTeams MatchTeam[]
+  sets       Set[]
+
+  @@map("matches")
+}
+
+enum MatchStatus {
+  WAITING
+  IN_PROGRESS
+  FINISHED
+}
+
+// 試合参加チーム
+model MatchTeam {
+  id      String @id @default(cuid())
+  matchId String
+  teamId  String
+  order   Int
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, teamId])
+  @@unique([matchId, order])
+  @@map("match_teams")
+}
+
+// セット（1試合に複数セット対応）
+model Set {
+  id        String    @id @default(cuid())
+  matchId   String
+  setNumber Int
+  status    SetStatus @default(IN_PROGRESS)
+  winnerId  String?
+
+  match          Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  turns          Turn[]
+  teamSetScores  TeamSetScore[]
+
+  @@unique([matchId, setNumber])
+  @@map("sets")
+}
+
+enum SetStatus {
+  IN_PROGRESS
+  FINISHED
+}
+
+// ターン（チームの投擲ラウンド）
+model Turn {
+  id         String @id @default(cuid())
+  setId      String
+  turnNumber Int
+
+  set    Set     @relation(fields: [setId], references: [id], onDelete: Cascade)
+  throws Throw[]
+
+  @@unique([setId, turnNumber])
+  @@map("turns")
+}
+
+// 投擲（1回の投げ）
+model Throw {
+  id              String     @id @default(cuid())
+  turnId          String
+  userId          String
+  teamId          String
+  throwOrder      Int
+  skittlesKnocked Int[]
+  score           Int
+  isFault         Boolean    @default(false)
+  faultType       FaultType?
+  createdAt       DateTime   @default(now())
+
+  turn Turn @relation(fields: [turnId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([turnId, throwOrder])
+  @@map("throws")
+}
+
+enum FaultType {
+  MISS
+  DROP
+  STEP_OVER
+  WRONG_ORDER
+}
+
+// チーム別セットスコア（集計用）
+model TeamSetScore {
+  id                String  @id @default(cuid())
+  setId             String
+  teamId            String
+  totalScore        Int     @default(0)
+  consecutiveMisses Int     @default(0)
+  isDisqualified    Boolean @default(false)
+
+  set Set @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@unique([setId, teamId])
+  @@map("team_set_scores")
+}
