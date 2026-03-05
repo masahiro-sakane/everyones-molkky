@@ -18,6 +18,7 @@ type Team = {
 type MatchTeam = {
   teamId: string
   order: number
+  memberOrder: string[]
   team: Team
 }
 
@@ -59,6 +60,10 @@ export type MatchData = {
   id: string
   shareCode: string
   status: string
+  limitType: 'NONE' | 'TURNS' | 'TIME'
+  turnLimit: number | null
+  timeLimitMinutes: number | null
+  startedAt: Date | string | null
   matchTeams: MatchTeam[]
   sets: Set[]
   teamSetScores?: TeamSetScore[]
@@ -92,6 +97,20 @@ export type ThrowHistoryEntry = {
   user: { name: string } | null
   teamName: string
   createdAt: Date | string
+}
+
+/**
+ * memberOrderに従ってメンバーを並べ替える
+ * memberOrderが空または未指定の場合はそのままの順序を返す
+ */
+function sortMembers(members: TeamMember[], memberOrder: string[]): TeamMember[] {
+  if (memberOrder.length === 0) return members
+  const orderMap = new Map(memberOrder.map((id, i) => [id, i]))
+  return [...members].sort((a, b) => {
+    const ai = orderMap.get(a.userId) ?? members.indexOf(a)
+    const bi = orderMap.get(b.userId) ?? members.indexOf(b)
+    return ai - bi
+  })
 }
 
 /**
@@ -151,8 +170,7 @@ export function useMatch(match: MatchData) {
     if (!currentMatchTeam) return null
 
     const team = currentMatchTeam.team
-    // チームメンバーの先頭を投擲者とする（後でローテーション対応可能）
-    const members = team.members
+    const members = sortMembers(team.members, currentMatchTeam.memberOrder)
     const memberIndex = Math.floor((latestTurn.turnNumber - 1) / teamCount) % Math.max(members.length, 1)
     const thrower = members[memberIndex] ?? members[0]
 
@@ -186,7 +204,7 @@ export function useMatch(match: MatchData) {
       const nextMatchTeam = match.matchTeams.find((mt) => mt.order === teamIndex + 1)
       if (nextMatchTeam && !disqualifiedIds.has(nextMatchTeam.teamId)) {
         const team = nextMatchTeam.team
-        const members = team.members
+        const members = sortMembers(team.members, nextMatchTeam.memberOrder)
         const memberIndex = Math.floor((nextTurnNumber - 1) / teamCount) % Math.max(members.length, 1)
         const thrower = members[memberIndex] ?? members[0]
         return {
@@ -232,6 +250,19 @@ export function useMatch(match: MatchData) {
   // 勝者
   const winnerTeamId = currentSet?.winnerId ?? null
 
+  // 現在の経過ラウンド数（全チームが1回ずつ投擲したラウンド）
+  const currentRound = useMemo(() => {
+    const latestTurnNumber = currentSet?.turns.at(-1)?.turnNumber ?? 0
+    const teamCount = match.matchTeams.length
+    return teamCount > 0 ? Math.floor(latestTurnNumber / teamCount) : 0
+  }, [currentSet, match.matchTeams.length])
+
+  // 残りターン数（ターン制限の場合）
+  const remainingRounds = useMemo(() => {
+    if (match.limitType !== 'TURNS' || match.turnLimit === null) return null
+    return Math.max(0, match.turnLimit - currentRound)
+  }, [match.limitType, match.turnLimit, currentRound])
+
   return {
     currentSet,
     teamScores,
@@ -241,5 +272,7 @@ export function useMatch(match: MatchData) {
     winnerTeamId,
     newlyDisqualifiedTeams,
     isFinished: match.status === 'FINISHED',
+    currentRound,
+    remainingRounds,
   }
 }

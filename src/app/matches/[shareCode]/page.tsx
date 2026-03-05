@@ -26,9 +26,14 @@ export default async function MatchPage({ params }: PageProps) {
     id: raw.id,
     shareCode: raw.shareCode,
     status: raw.status,
+    limitType: raw.limitType as 'NONE' | 'TURNS' | 'TIME',
+    turnLimit: raw.turnLimit,
+    timeLimitMinutes: raw.timeLimitMinutes,
+    startedAt: raw.startedAt,
     matchTeams: raw.matchTeams.map((mt) => ({
       teamId: mt.teamId,
       order: mt.order,
+      memberOrder: mt.memberOrder,
       team: {
         id: mt.team.id,
         name: mt.team.name,

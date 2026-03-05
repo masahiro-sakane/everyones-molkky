@@ -12,6 +12,7 @@ import { MatchResult } from './MatchResult'
 import { DisqualificationAlert } from './DisqualificationAlert'
 import { ShareButton } from './ShareButton'
 import { ConnectionStatus } from './ConnectionStatus'
+import { MatchLimitStatus } from './MatchLimitStatus'
 
 type MatchBoardProps = {
   match: MatchData
@@ -30,6 +31,8 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
     winnerTeamId,
     newlyDisqualifiedTeams,
     isFinished,
+    currentRound,
+    remainingRounds,
   } = useMatch(match)
 
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
@@ -133,6 +136,16 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
           />
         </div>
       )}
+
+      {/* 制限ルール状況 */}
+      <MatchLimitStatus
+        limitType={match.limitType}
+        turnLimit={match.turnLimit}
+        timeLimitMinutes={match.timeLimitMinutes}
+        startedAt={match.startedAt}
+        remainingRounds={remainingRounds}
+        currentRound={currentRound}
+      />
 
       {/* スコアボード */}
       <section aria-label="スコアボード">

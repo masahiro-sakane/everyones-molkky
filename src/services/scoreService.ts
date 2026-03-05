@@ -26,6 +26,8 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
                 throws: { orderBy: { throwOrder: 'desc' }, take: 1 },
               },
             },
+            // ターン数カウント用に全ターン数を取得
+            _count: { select: { turns: true } },
           },
         },
       },
@@ -101,10 +103,57 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
       ? validated.teamId
       : lastTeamStanding?.teamId ?? null
 
-    if (winnerId) {
+    // 制限超過チェック（通常勝利がない場合のみ）
+    let limitWinnerId: string | null = null
+    if (!winnerId) {
+      const teamCount = match.matchTeams.length
+      const completedRounds = Math.floor(currentTurn.turnNumber / teamCount)
+
+      // ターン制限チェック：1ラウンド（全チームが1回ずつ投擲）完了後に判定
+      if (
+        match.limitType === 'TURNS' &&
+        match.turnLimit !== null &&
+        match.turnLimit !== undefined &&
+        currentTurn.turnNumber % teamCount === 0 &&
+        completedRounds >= match.turnLimit
+      ) {
+        const activeScores = allTeamScores.filter((s) => !s.isDisqualified)
+        const maxScore = Math.max(...activeScores.map((s) => s.totalScore))
+        const topTeams = activeScores.filter((s) => s.totalScore === maxScore)
+        if (topTeams.length === 1) {
+          limitWinnerId = topTeams[0].teamId
+        }
+        // 同点の場合は継続（limitWinnerIdはnullのまま）
+      }
+
+      // 時間制限チェック
+      if (
+        match.limitType === 'TIME' &&
+        match.timeLimitMinutes !== null &&
+        match.timeLimitMinutes !== undefined &&
+        match.startedAt !== null &&
+        match.startedAt !== undefined &&
+        currentTurn.turnNumber % teamCount === 0 // ラウンドの最後に判定
+      ) {
+        const elapsedMs = Date.now() - new Date(match.startedAt).getTime()
+        const elapsedMinutes = elapsedMs / 1000 / 60
+        if (elapsedMinutes >= match.timeLimitMinutes) {
+          const activeScores = allTeamScores.filter((s) => !s.isDisqualified)
+          const maxScore = Math.max(...activeScores.map((s) => s.totalScore))
+          const topTeams = activeScores.filter((s) => s.totalScore === maxScore)
+          if (topTeams.length === 1) {
+            limitWinnerId = topTeams[0].teamId
+          }
+        }
+      }
+    }
+
+    const finalWinnerId = winnerId ?? limitWinnerId
+
+    if (finalWinnerId) {
       await tx.set.update({
         where: { id: currentSet.id },
-        data: { status: 'FINISHED', winnerId },
+        data: { status: 'FINISHED', winnerId: finalWinnerId },
       })
       await tx.match.update({
         where: { id: match.id },

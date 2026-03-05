@@ -20,8 +20,15 @@ vi.mock('react', async (importOriginal) => {
 })
 
 const mockTeams = [
-  { id: 'team-a', name: 'チームA', members: [{ userId: 'u1' }, { userId: 'u2' }] },
-  { id: 'team-b', name: 'チームB', members: [{ userId: 'u3' }] },
+  {
+    id: 'team-a',
+    name: 'チームA',
+    members: [
+      { userId: 'u1', user: { id: 'u1', name: '田中' } },
+      { userId: 'u2', user: { id: 'u2', name: '佐藤' } },
+    ],
+  },
+  { id: 'team-b', name: 'チームB', members: [{ userId: 'u3', user: { id: 'u3', name: '鈴木' } }] },
   { id: 'team-c', name: 'チームC', members: [] },
 ]
 
@@ -77,6 +84,52 @@ describe('CreateMatchForm', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /チームA/ }))
     await user.click(screen.getByRole('button', { name: /チームB/ }))
-    expect(screen.getByText('投擲順（選択順）')).toBeInTheDocument()
+    expect(screen.getByText('チームの投擲順（選択順）')).toBeInTheDocument()
+  })
+
+  it('制限ルール選択肢が3つ表示される', () => {
+    render(<CreateMatchForm teams={mockTeams} />)
+    expect(screen.getByText('制限なし')).toBeInTheDocument()
+    expect(screen.getByText('ターン制限')).toBeInTheDocument()
+    expect(screen.getByText('時間制限')).toBeInTheDocument()
+  })
+
+  it('初期状態では「制限なし」が選択されている', () => {
+    render(<CreateMatchForm teams={mockTeams} />)
+    const noneRadio = screen.getByDisplayValue('NONE')
+    expect(noneRadio).toBeChecked()
+  })
+
+  it('ターン制限を選択するとラウンド数入力が表示される', async () => {
+    render(<CreateMatchForm teams={mockTeams} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByDisplayValue('TURNS'))
+    expect(screen.getByText('ラウンド数')).toBeInTheDocument()
+    expect(screen.getByLabelText('ラウンド数を減らす')).toBeInTheDocument()
+    expect(screen.getByLabelText('ラウンド数を増やす')).toBeInTheDocument()
+    expect(screen.getByText('12')).toBeInTheDocument()
+  })
+
+  it('時間制限を選択すると制限時間入力が表示される', async () => {
+    render(<CreateMatchForm teams={mockTeams} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByDisplayValue('TIME'))
+    expect(screen.getByText('制限時間')).toBeInTheDocument()
+    expect(screen.getByLabelText('制限時間を減らす')).toBeInTheDocument()
+    expect(screen.getByLabelText('制限時間を増やす')).toBeInTheDocument()
+    expect(screen.getByText('20')).toBeInTheDocument()
+  })
+
+  it('ターン数の増減ボタンが機能する', async () => {
+    render(<CreateMatchForm teams={mockTeams} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByDisplayValue('TURNS'))
+    const increaseBtn = screen.getByLabelText('ラウンド数を増やす')
+    await user.click(increaseBtn)
+    expect(screen.getByText('13')).toBeInTheDocument()
+    const decreaseBtn = screen.getByLabelText('ラウンド数を減らす')
+    await user.click(decreaseBtn)
+    await user.click(decreaseBtn)
+    expect(screen.getByText('11')).toBeInTheDocument()
   })
 })

@@ -6,10 +6,15 @@ const baseMatch: MatchData = {
   id: 'match-1',
   shareCode: 'abc123',
   status: 'IN_PROGRESS',
+  limitType: 'NONE',
+  turnLimit: null,
+  timeLimitMinutes: null,
+  startedAt: null,
   matchTeams: [
     {
       teamId: 'team-a',
       order: 1,
+      memberOrder: [],
       team: {
         id: 'team-a',
         name: 'チームA',
@@ -21,6 +26,7 @@ const baseMatch: MatchData = {
     {
       teamId: 'team-b',
       order: 2,
+      memberOrder: [],
       team: {
         id: 'team-b',
         name: 'チームB',
@@ -147,5 +153,56 @@ describe('useMatch', () => {
     const { result } = renderHook(() => useMatch(match))
     expect(result.current.currentThrower?.teamId).toBe('team-b')
     expect(result.current.currentThrower?.teamOrder).toBe(2)
+  })
+
+  it('limitType=NONEのときremainingRoundsはnull', () => {
+    const { result } = renderHook(() => useMatch(baseMatch))
+    expect(result.current.remainingRounds).toBeNull()
+  })
+
+  it('limitType=TURNSのとき残りラウンド数を返す（ターン1・2チーム・制限12）', () => {
+    const match = {
+      ...baseMatch,
+      limitType: 'TURNS' as const,
+      turnLimit: 12,
+    }
+    const { result } = renderHook(() => useMatch(match))
+    // ターン1でチームAが投擲中 → completedRounds = floor(1/2) = 0
+    expect(result.current.currentRound).toBe(0)
+    expect(result.current.remainingRounds).toBe(12)
+  })
+
+  it('limitType=TURNSで2ラウンド完了（ターン4）のとき残り10ラウンド', () => {
+    const match = {
+      ...baseMatch,
+      limitType: 'TURNS' as const,
+      turnLimit: 12,
+      sets: [
+        {
+          ...baseMatch.sets[0],
+          turns: [
+            ...baseMatch.sets[0].turns,
+            { id: 'turn-2', turnNumber: 2, throws: [] },
+            { id: 'turn-3', turnNumber: 3, throws: [] },
+            { id: 'turn-4', turnNumber: 4, throws: [] },
+          ],
+        },
+      ],
+    }
+    const { result } = renderHook(() => useMatch(match))
+    // ターン4 / 2チーム = 2ラウンド完了
+    expect(result.current.currentRound).toBe(2)
+    expect(result.current.remainingRounds).toBe(10)
+  })
+
+  it('limitType=TIMEのときremainingRoundsはnull', () => {
+    const match = {
+      ...baseMatch,
+      limitType: 'TIME' as const,
+      timeLimitMinutes: 20,
+      startedAt: new Date().toISOString(),
+    }
+    const { result } = renderHook(() => useMatch(match))
+    expect(result.current.remainingRounds).toBeNull()
   })
 })

@@ -18,7 +18,30 @@ export async function createMatchAction(
 ): Promise<MatchActionState> {
   const teamIds = formData.getAll('teamIds') as string[]
 
-  const parsed = createMatchSchema.safeParse({ teamIds })
+  // 各チームのメンバー投擲順を取得（キー: memberOrder_{teamId}、値: ユーザーIDのJSON配列）
+  const memberOrders: Record<string, string[]> = {}
+  for (const teamId of teamIds) {
+    const raw = formData.get(`memberOrder_${teamId}`)
+    if (raw) {
+      try {
+        memberOrders[teamId] = JSON.parse(raw as string)
+      } catch {
+        // パース失敗は無視（デフォルト順を使用）
+      }
+    }
+  }
+
+  const limitTypeRaw = formData.get('limitType') as string | null
+  const turnLimitRaw = formData.get('turnLimit')
+  const timeLimitMinutesRaw = formData.get('timeLimitMinutes')
+
+  const parsed = createMatchSchema.safeParse({
+    teamIds,
+    memberOrders: Object.keys(memberOrders).length > 0 ? memberOrders : undefined,
+    limitType: limitTypeRaw ?? 'NONE',
+    turnLimit: turnLimitRaw ? Number(turnLimitRaw) : undefined,
+    timeLimitMinutes: timeLimitMinutesRaw ? Number(timeLimitMinutesRaw) : undefined,
+  })
   if (!parsed.success) {
     return {
       errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,

@@ -28,6 +28,12 @@ export const createMatchSchema = z.object({
     .array(z.string().min(1))
     .min(2, '試合には2チーム以上が必要です')
     .max(10, '試合には10チーム以下が必要です'),
+  // チームIDをキー、メンバーのuserIdリストを値とする投擲順序マップ
+  memberOrders: z.record(z.string(), z.array(z.string())).optional(),
+  // 制限ルール
+  limitType: z.enum(['NONE', 'TURNS', 'TIME']).optional(),
+  turnLimit: z.number().int().min(1).max(100).optional(),
+  timeLimitMinutes: z.number().int().min(1).max(180).optional(),
 })
 
 // 有効なスキットル番号（1〜12）

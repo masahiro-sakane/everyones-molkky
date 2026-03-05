@@ -8,17 +8,25 @@ export async function createMatch(input: CreateMatchInput) {
   const validated = createMatchSchema.parse(input)
 
   return db.$transaction(async (tx) => {
+    const limitType = validated.limitType ?? 'NONE'
+
     // 試合を作成
     const match = await tx.match.create({
-      data: { status: 'WAITING' },
+      data: {
+        status: 'WAITING',
+        limitType,
+        turnLimit: limitType === 'TURNS' ? (validated.turnLimit ?? 12) : null,
+        timeLimitMinutes: limitType === 'TIME' ? (validated.timeLimitMinutes ?? 20) : null,
+      },
     })
 
-    // 参加チームを登録（投擲順は入力順）
+    // 参加チームを登録（投擲順は入力順、メンバー順は指定があれば使用）
     await tx.matchTeam.createMany({
       data: validated.teamIds.map((teamId, index) => ({
         matchId: match.id,
         teamId,
         order: index + 1,
+        memberOrder: validated.memberOrders?.[teamId] ?? [],
       })),
     })
 
@@ -46,7 +54,7 @@ export async function createMatch(input: CreateMatchInput) {
     // ステータスをIN_PROGRESSに更新
     return tx.match.update({
       where: { id: match.id },
-      data: { status: 'IN_PROGRESS' },
+      data: { status: 'IN_PROGRESS', startedAt: new Date() },
       include: {
         matchTeams: { include: { team: true }, orderBy: { order: 'asc' } },
         sets: {

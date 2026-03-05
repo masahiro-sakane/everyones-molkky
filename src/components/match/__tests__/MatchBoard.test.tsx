@@ -15,10 +15,15 @@ const baseMatch: MatchData = {
   id: 'match-1',
   shareCode: 'SHARE01',
   status: 'IN_PROGRESS',
+  limitType: 'NONE',
+  turnLimit: null,
+  timeLimitMinutes: null,
+  startedAt: null,
   matchTeams: [
     {
       teamId: 'team-1',
       order: 1,
+      memberOrder: [],
       team: {
         id: 'team-1',
         name: 'チームA',
@@ -28,6 +33,7 @@ const baseMatch: MatchData = {
     {
       teamId: 'team-2',
       order: 2,
+      memberOrder: [],
       team: {
         id: 'team-2',
         name: 'チームB',
@@ -82,6 +88,34 @@ describe('MatchBoard', () => {
   it('通常モードでは投擲入力セクションが表示される', () => {
     render(<MatchBoard match={baseMatch} />)
     expect(screen.getByText('投擲を記録')).toBeInTheDocument()
+  })
+
+  it('limitType=NONEのとき制限ルール表示がない', () => {
+    render(<MatchBoard match={baseMatch} />)
+    expect(screen.queryByLabelText('ターン制限状況')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('時間制限状況')).not.toBeInTheDocument()
+  })
+
+  it('limitType=TURNSのときターン制限状況が表示される', () => {
+    const match: MatchData = {
+      ...baseMatch,
+      limitType: 'TURNS',
+      turnLimit: 12,
+    }
+    render(<MatchBoard match={match} />)
+    expect(screen.getByLabelText('ターン制限状況')).toBeInTheDocument()
+    expect(screen.getAllByText(/ラウンド/).length).toBeGreaterThan(0)
+  })
+
+  it('limitType=TIMEのとき時間制限状況が表示される', () => {
+    const match: MatchData = {
+      ...baseMatch,
+      limitType: 'TIME',
+      timeLimitMinutes: 20,
+      startedAt: new Date().toISOString(),
+    }
+    render(<MatchBoard match={match} />)
+    expect(screen.getByLabelText('時間制限状況')).toBeInTheDocument()
   })
 
   it('試合終了時はMatchResultを表示する', () => {
