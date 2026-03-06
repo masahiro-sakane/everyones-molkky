@@ -40,7 +40,7 @@ describe.skipIf(!hasDb)('scoreService 統合テスト', () => {
     teamIds.push(teamA.id, teamB.id)
     userIds.push(user.id)
 
-    const match = await createMatch({ teamIds: [teamA.id, teamB.id] })
+    const match = await createMatch({ matchType: 'TEAM', teamIds: [teamA.id, teamB.id] })
     matchIds.push(match.id)
 
     return { match, teamA, teamB, user }

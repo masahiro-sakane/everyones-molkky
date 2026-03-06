@@ -35,7 +35,7 @@ describe.skipIf(!hasDb)('matchService 統合テスト', () => {
 
   it('試合を作成できる', async () => {
     const [teamAId, teamBId] = await setupTeams()
-    const match = await createMatch({ teamIds: [teamAId, teamBId] })
+    const match = await createMatch({ matchType: 'TEAM', teamIds: [teamAId, teamBId] })
     matchIds.push(match.id)
 
     expect(match.status).toBe('IN_PROGRESS')
@@ -46,7 +46,7 @@ describe.skipIf(!hasDb)('matchService 統合テスト', () => {
 
   it('shareCodeで試合を取得できる', async () => {
     const [teamAId, teamBId] = await setupTeams()
-    const match = await createMatch({ teamIds: [teamAId, teamBId] })
+    const match = await createMatch({ matchType: 'TEAM', teamIds: [teamAId, teamBId] })
     matchIds.push(match.id)
 
     const found = await getMatchByShareCode(match.shareCode)
@@ -61,7 +61,7 @@ describe.skipIf(!hasDb)('matchService 統合テスト', () => {
 
   it('試合一覧を取得できる', async () => {
     const [teamAId, teamBId] = await setupTeams()
-    const match = await createMatch({ teamIds: [teamAId, teamBId] })
+    const match = await createMatch({ matchType: 'TEAM', teamIds: [teamAId, teamBId] })
     matchIds.push(match.id)
 
     const matches = await listMatches()
@@ -71,12 +71,12 @@ describe.skipIf(!hasDb)('matchService 統合テスト', () => {
   it('2チーム未満で試合作成はエラーになる', async () => {
     const teamA = await createTeam({ name: `単チーム_${Date.now()}` })
     teamIds.push(teamA.id)
-    await expect(createMatch({ teamIds: [teamA.id] })).rejects.toThrow()
+    await expect(createMatch({ matchType: 'TEAM', teamIds: [teamA.id] })).rejects.toThrow()
   })
 
   it('試合を終了できる', async () => {
     const [teamAId, teamBId] = await setupTeams()
-    const match = await createMatch({ teamIds: [teamAId, teamBId] })
+    const match = await createMatch({ matchType: 'TEAM', teamIds: [teamAId, teamBId] })
     matchIds.push(match.id)
 
     const finished = await finishMatch(match.id)

@@ -22,14 +22,28 @@ export const addTeamMemberSchema = z.object({
   role: z.enum(['captain', 'member']).optional().default('member'),
 })
 
-// 試合作成
+// 試合作成（チーム戦）
 export const createMatchSchema = z.object({
+  matchType: z.enum(['TEAM', 'SOLO']).optional().default('TEAM'),
   teamIds: z
     .array(z.string().min(1))
     .min(2, '試合には2チーム以上が必要です')
     .max(10, '試合には10チーム以下が必要です'),
   // チームIDをキー、メンバーのuserIdリストを値とする投擲順序マップ
   memberOrders: z.record(z.string(), z.array(z.string())).optional(),
+  // 制限ルール
+  limitType: z.enum(['NONE', 'TURNS', 'TIME']).optional(),
+  turnLimit: z.number().int().min(1).max(100).optional(),
+  timeLimitMinutes: z.number().int().min(1).max(180).optional(),
+})
+
+// 試合作成（個人戦）
+export const createSoloMatchSchema = z.object({
+  matchType: z.literal('SOLO'),
+  playerIds: z
+    .array(z.string().min(1))
+    .min(2, '個人戦には2人以上が必要です')
+    .max(10, '個人戦には10人以下が必要です'),
   // 制限ルール
   limitType: z.enum(['NONE', 'TURNS', 'TIME']).optional(),
   turnLimit: z.number().int().min(1).max(100).optional(),
@@ -58,4 +72,5 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>
 export type CreateTeamInput = z.infer<typeof createTeamSchema>
 export type AddTeamMemberInput = z.infer<typeof addTeamMemberSchema>
 export type CreateMatchInput = z.infer<typeof createMatchSchema>
+export type CreateSoloMatchInput = z.infer<typeof createSoloMatchSchema>
 export type RecordThrowInput = z.infer<typeof recordThrowSchema>

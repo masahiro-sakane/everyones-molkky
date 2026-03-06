@@ -15,6 +15,7 @@ const baseMatch: MatchData = {
   id: 'match-1',
   shareCode: 'SHARE01',
   status: 'IN_PROGRESS',
+  matchType: 'TEAM',
   limitType: 'NONE',
   turnLimit: null,
   timeLimitMinutes: null,
@@ -27,6 +28,7 @@ const baseMatch: MatchData = {
       team: {
         id: 'team-1',
         name: 'チームA',
+        isSolo: false,
         members: [{ userId: 'user-1', role: 'MEMBER', user: { id: 'user-1', name: '田中' } }],
       },
     },
@@ -37,6 +39,7 @@ const baseMatch: MatchData = {
       team: {
         id: 'team-2',
         name: 'チームB',
+        isSolo: false,
         members: [{ userId: 'user-2', role: 'MEMBER', user: { id: 'user-2', name: '鈴木' } }],
       },
     },

@@ -26,6 +26,7 @@ export default async function MatchPage({ params }: PageProps) {
     id: raw.id,
     shareCode: raw.shareCode,
     status: raw.status,
+    matchType: raw.matchType as 'TEAM' | 'SOLO',
     limitType: raw.limitType as 'NONE' | 'TURNS' | 'TIME',
     turnLimit: raw.turnLimit,
     timeLimitMinutes: raw.timeLimitMinutes,
@@ -37,6 +38,7 @@ export default async function MatchPage({ params }: PageProps) {
       team: {
         id: mt.team.id,
         name: mt.team.name,
+        isSolo: mt.team.isSolo,
         members: mt.team.members.map((m) => ({
           userId: m.userId,
           role: m.role,
@@ -74,13 +76,16 @@ export default async function MatchPage({ params }: PageProps) {
     })),
   }
 
-  const teamNames = raw.matchTeams.map((mt) => mt.team.name).join(' vs ')
+  const isSolo = raw.matchType === 'SOLO'
+  const matchTitle = isSolo
+    ? raw.matchTeams.map((mt) => mt.team.name).join(', ') + '（個人戦）'
+    : raw.matchTeams.map((mt) => mt.team.name).join(' vs ')
 
   return (
     <AppLayout>
       <div className="max-w-lg mx-auto">
         <div className="mb-4">
-          <h1 className="text-lg font-bold text-neutral-900">{teamNames}</h1>
+          <h1 className="text-lg font-bold text-neutral-900">{matchTitle}</h1>
           <p className="text-xs text-neutral-400">
             {raw.status === 'FINISHED' ? '試合終了' : '進行中'}
           </p>

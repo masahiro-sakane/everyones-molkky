@@ -12,6 +12,7 @@ type TeamMember = {
 type Team = {
   id: string
   name: string
+  isSolo: boolean
   members: TeamMember[]
 }
 
@@ -60,6 +61,7 @@ export type MatchData = {
   id: string
   shareCode: string
   status: string
+  matchType: 'TEAM' | 'SOLO'
   limitType: 'NONE' | 'TURNS' | 'TIME'
   turnLimit: number | null
   timeLimitMinutes: number | null
@@ -72,6 +74,7 @@ export type MatchData = {
 export type TeamScoreDisplay = {
   teamId: string
   teamName: string
+  isSolo: boolean
   totalScore: number
   consecutiveMisses: number
   isDisqualified: boolean
@@ -134,6 +137,7 @@ export function useMatch(match: MatchData) {
         return {
           teamId: mt.teamId,
           teamName: mt.team.name,
+          isSolo: mt.team.isSolo,
           totalScore: score?.totalScore ?? 0,
           consecutiveMisses: score?.consecutiveMisses ?? 0,
           isDisqualified: score?.isDisqualified ?? false,
@@ -147,6 +151,7 @@ export function useMatch(match: MatchData) {
     return match.matchTeams.map((mt) => ({
       teamId: mt.teamId,
       teamName: mt.team.name,
+      isSolo: mt.team.isSolo,
       totalScore: 0,
       consecutiveMisses: 0,
       isDisqualified: false,

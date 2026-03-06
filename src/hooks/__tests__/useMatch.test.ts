@@ -6,6 +6,7 @@ const baseMatch: MatchData = {
   id: 'match-1',
   shareCode: 'abc123',
   status: 'IN_PROGRESS',
+  matchType: 'TEAM',
   limitType: 'NONE',
   turnLimit: null,
   timeLimitMinutes: null,
@@ -18,6 +19,7 @@ const baseMatch: MatchData = {
       team: {
         id: 'team-a',
         name: 'チームA',
+        isSolo: false,
         members: [
           { userId: 'user-1', role: 'captain', user: { id: 'user-1', name: '田中 太郎' } },
         ],
@@ -30,6 +32,7 @@ const baseMatch: MatchData = {
       team: {
         id: 'team-b',
         name: 'チームB',
+        isSolo: false,
         members: [
           { userId: 'user-2', role: 'member', user: { id: 'user-2', name: '佐藤 花子' } },
         ],

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createMatch } from '@/services/matchService'
+import { createMatch, createSoloMatch } from '@/services/matchService'
 import { recordThrow } from '@/services/scoreService'
-import { createMatchSchema, recordThrowSchema } from '@/lib/validation'
+import { createMatchSchema, createSoloMatchSchema, recordThrowSchema } from '@/lib/validation'
 import { ZodError } from 'zod'
 
 export type MatchActionState = {
@@ -16,6 +16,39 @@ export async function createMatchAction(
   _prevState: MatchActionState,
   formData: FormData
 ): Promise<MatchActionState> {
+  const matchType = formData.get('matchType') as string | null
+
+  // 個人戦の場合
+  if (matchType === 'SOLO') {
+    const playerIds = formData.getAll('playerIds') as string[]
+    const limitTypeRaw = formData.get('limitType') as string | null
+    const turnLimitRaw = formData.get('turnLimit')
+    const timeLimitMinutesRaw = formData.get('timeLimitMinutes')
+
+    const parsed = createSoloMatchSchema.safeParse({
+      matchType: 'SOLO',
+      playerIds,
+      limitType: limitTypeRaw ?? 'NONE',
+      turnLimit: turnLimitRaw ? Number(turnLimitRaw) : undefined,
+      timeLimitMinutes: timeLimitMinutesRaw ? Number(timeLimitMinutesRaw) : undefined,
+    })
+    if (!parsed.success) {
+      return { errors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+    }
+
+    try {
+      const match = await createSoloMatch(parsed.data)
+      revalidatePath('/matches')
+      redirect(`/matches/${match.shareCode}`)
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return { errors: error.flatten().fieldErrors as Record<string, string[]> }
+      }
+      throw error
+    }
+  }
+
+  // チーム戦の場合
   const teamIds = formData.getAll('teamIds') as string[]
 
   // 各チームのメンバー投擲順を取得（キー: memberOrder_{teamId}、値: ユーザーIDのJSON配列）
@@ -36,6 +69,7 @@ export async function createMatchAction(
   const timeLimitMinutesRaw = formData.get('timeLimitMinutes')
 
   const parsed = createMatchSchema.safeParse({
+    matchType: 'TEAM',
     teamIds,
     memberOrders: Object.keys(memberOrders).length > 0 ? memberOrders : undefined,
     limitType: limitTypeRaw ?? 'NONE',

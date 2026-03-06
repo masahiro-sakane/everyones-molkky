@@ -1,8 +1,9 @@
 import { db } from '@/lib/db'
-import { createMatchSchema } from '@/lib/validation'
+import { createMatchSchema, createSoloMatchSchema } from '@/lib/validation'
 import type { z } from 'zod'
 
 export type CreateMatchInput = z.infer<typeof createMatchSchema>
+export type CreateSoloMatchInput = z.infer<typeof createSoloMatchSchema>
 
 export async function createMatch(input: CreateMatchInput) {
   const validated = createMatchSchema.parse(input)
@@ -14,6 +15,7 @@ export async function createMatch(input: CreateMatchInput) {
     const match = await tx.match.create({
       data: {
         status: 'WAITING',
+        matchType: 'TEAM',
         limitType,
         turnLimit: limitType === 'TURNS' ? (validated.turnLimit ?? 12) : null,
         timeLimitMinutes: limitType === 'TIME' ? (validated.timeLimitMinutes ?? 20) : null,
@@ -38,6 +40,92 @@ export async function createMatch(input: CreateMatchInput) {
     // 各チームの初期スコアレコードを作成
     await tx.teamSetScore.createMany({
       data: validated.teamIds.map((teamId) => ({
+        setId: set.id,
+        teamId,
+        totalScore: 0,
+        consecutiveMisses: 0,
+        isDisqualified: false,
+      })),
+    })
+
+    // 第1ターンを作成
+    await tx.turn.create({
+      data: { setId: set.id, turnNumber: 1 },
+    })
+
+    // ステータスをIN_PROGRESSに更新
+    return tx.match.update({
+      where: { id: match.id },
+      data: { status: 'IN_PROGRESS', startedAt: new Date() },
+      include: {
+        matchTeams: { include: { team: true }, orderBy: { order: 'asc' } },
+        sets: {
+          include: {
+            turns: { include: { throws: true } },
+          },
+        },
+      },
+    })
+  })
+}
+
+export async function createSoloMatch(input: CreateSoloMatchInput) {
+  const validated = createSoloMatchSchema.parse(input)
+
+  // 参加プレイヤーをDBから取得
+  const players = await db.user.findMany({
+    where: { id: { in: validated.playerIds } },
+  })
+  if (players.length !== validated.playerIds.length) {
+    throw new Error('存在しないプレイヤーが含まれています')
+  }
+
+  return db.$transaction(async (tx) => {
+    const limitType = validated.limitType ?? 'NONE'
+
+    // 試合を作成
+    const match = await tx.match.create({
+      data: {
+        status: 'WAITING',
+        matchType: 'SOLO',
+        limitType,
+        turnLimit: limitType === 'TURNS' ? (validated.turnLimit ?? 12) : null,
+        timeLimitMinutes: limitType === 'TIME' ? (validated.timeLimitMinutes ?? 20) : null,
+      },
+    })
+
+    // 参加プレイヤーごとに1人チームを自動生成して登録
+    const teamIds: string[] = []
+    for (const [index, playerId] of validated.playerIds.entries()) {
+      const player = players.find((p) => p.id === playerId)!
+      const soloTeam = await tx.team.create({
+        data: {
+          name: player.name,
+          isSolo: true,
+          members: {
+            create: { userId: playerId, role: 'captain' },
+          },
+        },
+      })
+      await tx.matchTeam.create({
+        data: {
+          matchId: match.id,
+          teamId: soloTeam.id,
+          order: index + 1,
+          memberOrder: [playerId],
+        },
+      })
+      teamIds.push(soloTeam.id)
+    }
+
+    // 第1セットを作成
+    const set = await tx.set.create({
+      data: { matchId: match.id, setNumber: 1 },
+    })
+
+    // 各プレイヤー（チーム）の初期スコアレコードを作成
+    await tx.teamSetScore.createMany({
+      data: teamIds.map((teamId) => ({
         setId: set.id,
         teamId,
         totalScore: 0,

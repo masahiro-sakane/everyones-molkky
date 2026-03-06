@@ -92,7 +92,9 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold truncate">{currentThrower.userName}</p>
-              <p className="text-xs opacity-80 truncate">{currentThrower.teamName}</p>
+              {match.matchType !== 'SOLO' && (
+                <p className="text-xs opacity-80 truncate">{currentThrower.teamName}</p>
+              )}
             </div>
           </div>
           {nextThrower && (
@@ -127,11 +129,11 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
       {currentThrower && (
         <div ref={throwerRef}>
           <CurrentThrower
-            teamName={currentThrower.teamName}
+            teamName={match.matchType === 'SOLO' ? '' : currentThrower.teamName}
             throwerName={currentThrower.userName}
             teamOrder={currentThrower.teamOrder}
             totalTeams={currentThrower.totalTeams}
-            nextTeamName={nextThrower?.teamName}
+            nextTeamName={match.matchType === 'SOLO' ? undefined : nextThrower?.teamName}
             nextThrowerName={nextThrower?.userName}
           />
         </div>

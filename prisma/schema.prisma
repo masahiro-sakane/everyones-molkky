@@ -27,6 +27,7 @@ model User {
 model Team {
   id        String   @id @default(cuid())
   name      String
+  isSolo    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -56,6 +57,7 @@ model Match {
   id                String      @id @default(cuid())
   status            MatchStatus @default(WAITING)
   shareCode         String      @unique @default(cuid())
+  matchType         MatchType   @default(TEAM)
   limitType         LimitType   @default(NONE)
   turnLimit         Int?
   timeLimitMinutes  Int?
@@ -73,6 +75,11 @@ enum MatchStatus {
   WAITING
   IN_PROGRESS
   FINISHED
+}
+
+enum MatchType {
+  TEAM
+  SOLO
 }
 
 enum LimitType {

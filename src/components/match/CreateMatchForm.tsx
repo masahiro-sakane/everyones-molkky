@@ -16,18 +16,143 @@ type Team = {
   members: TeamMember[]
 }
 
+type User = {
+  id: string
+  name: string
+}
+
 type LimitType = 'NONE' | 'TURNS' | 'TIME'
+type MatchMode = 'TEAM' | 'SOLO'
 
 type CreateMatchFormProps = {
   teams: Team[]
+  users: User[]
 }
 
 const initialState: MatchActionState = {}
 
-export function CreateMatchForm({ teams }: CreateMatchFormProps) {
+function LimitRuleSection({
+  limitType,
+  setLimitType,
+  turnLimit,
+  setTurnLimit,
+  timeLimitMinutes,
+  setTimeLimitMinutes,
+}: {
+  limitType: LimitType
+  setLimitType: (v: LimitType) => void
+  turnLimit: number
+  setTurnLimit: (fn: (v: number) => number) => void
+  timeLimitMinutes: number
+  setTimeLimitMinutes: (fn: (v: number) => number) => void
+}) {
+  return (
+    <div>
+      <p className="text-sm font-medium text-neutral-800 mb-3">制限ルール</p>
+      <div className="flex flex-col gap-2">
+        {(
+          [
+            { value: 'NONE', label: '制限なし', desc: '50点到達または全プレイヤー失格まで続ける' },
+            { value: 'TURNS', label: 'ターン制限', desc: '指定ラウンド終了後に最高得点が勝利' },
+            { value: 'TIME', label: '時間制限', desc: '指定時間経過後のラウンド終了時に最高得点が勝利' },
+          ] as { value: LimitType; label: string; desc: string }[]
+        ).map(({ value, label, desc }) => (
+          <label
+            key={value}
+            className={[
+              'flex items-start gap-3 px-4 py-3 rounded-md border cursor-pointer transition-colors',
+              limitType === value
+                ? 'border-brand-500 bg-brand-50'
+                : 'border-neutral-300 bg-neutral-0 hover:border-neutral-400',
+            ].join(' ')}
+          >
+            <input
+              type="radio"
+              name="limitType"
+              value={value}
+              checked={limitType === value}
+              onChange={() => setLimitType(value)}
+              className="mt-0.5 accent-brand-500"
+            />
+            <div>
+              <p className={`text-sm font-medium ${limitType === value ? 'text-brand-700' : 'text-neutral-800'}`}>
+                {label}
+              </p>
+              <p className="text-xs text-neutral-500 mt-0.5">{desc}</p>
+            </div>
+          </label>
+        ))}
+      </div>
+
+      {limitType === 'TURNS' && (
+        <div className="mt-3 flex items-center gap-3">
+          <input type="hidden" name="turnLimit" value={turnLimit} />
+          <label className="text-sm text-neutral-700 shrink-0">ラウンド数</label>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setTurnLimit((v) => Math.max(1, v - 1))}
+              className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
+              aria-label="ラウンド数を減らす"
+            >
+              −
+            </button>
+            <span className="w-12 text-center font-bold text-lg tabular-nums">{turnLimit}</span>
+            <button
+              type="button"
+              onClick={() => setTurnLimit((v) => Math.min(100, v + 1))}
+              className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
+              aria-label="ラウンド数を増やす"
+            >
+              ＋
+            </button>
+          </div>
+          <span className="text-sm text-neutral-500">ラウンド</span>
+        </div>
+      )}
+
+      {limitType === 'TIME' && (
+        <div className="mt-3 flex items-center gap-3">
+          <input type="hidden" name="timeLimitMinutes" value={timeLimitMinutes} />
+          <label className="text-sm text-neutral-700 shrink-0">制限時間</label>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setTimeLimitMinutes((v) => Math.max(1, v - 5))}
+              className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
+              aria-label="制限時間を減らす"
+            >
+              −
+            </button>
+            <span className="w-12 text-center font-bold text-lg tabular-nums">{timeLimitMinutes}</span>
+            <button
+              type="button"
+              onClick={() => setTimeLimitMinutes((v) => Math.min(180, v + 5))}
+              className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
+              aria-label="制限時間を増やす"
+            >
+              ＋
+            </button>
+          </div>
+          <span className="text-sm text-neutral-500">分</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
   const [state, action, isPending] = useActionState(createMatchAction, initialState)
+  const [matchMode, setMatchMode] = useState<MatchMode>('TEAM')
+
+  // チーム戦用
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([])
   const [memberOrders, setMemberOrders] = useState<Record<string, string[]>>({})
+
+  // 個人戦用
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([])
+
+  // 共通：制限ルール
   const [limitType, setLimitType] = useState<LimitType>('NONE')
   const [turnLimit, setTurnLimit] = useState(12)
   const [timeLimitMinutes, setTimeLimitMinutes] = useState(20)
@@ -63,220 +188,246 @@ export function CreateMatchForm({ teams }: CreateMatchFormProps) {
     })
   }
 
+  const togglePlayer = (playerId: string) => {
+    setSelectedPlayerIds((prev) =>
+      prev.includes(playerId)
+        ? prev.filter((id) => id !== playerId)
+        : [...prev, playerId]
+    )
+  }
+
+  const canSubmit =
+    matchMode === 'TEAM' ? selectedTeamIds.length >= 2 : selectedPlayerIds.length >= 2
+
   return (
     <form action={action} className="flex flex-col gap-6">
-      {/* チーム選択 */}
-      <div>
-        <p className="text-sm font-medium text-neutral-800 mb-3">
-          参加チームを選択
-          <span className="ml-0.5 text-danger-500" aria-hidden="true">*</span>
-          <span className="ml-2 text-xs font-normal text-neutral-500">（2チーム以上選択してください）</span>
-        </p>
+      <input type="hidden" name="matchType" value={matchMode} />
 
-        {teams.length === 0 ? (
-          <p className="text-sm text-neutral-500 py-4">
-            チームがありません。先にチームを作成してください。
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {teams.map((team) => {
-              const isSelected = selectedTeamIds.includes(team.id)
-              return (
-                <button
-                  key={team.id}
-                  type="button"
-                  onClick={() => toggleTeam(team.id)}
-                  className={[
-                    'flex items-center justify-between px-4 py-3 rounded-md border text-left transition-colors',
-                    isSelected
-                      ? 'border-brand-500 bg-brand-50 text-brand-700'
-                      : 'border-neutral-300 bg-neutral-0 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50',
-                  ].join(' ')}
-                  aria-pressed={isSelected}
-                  data-testid={`team-button-${team.id}`}
-                >
-                  <span className="font-medium text-sm">{team.name}</span>
-                  <Badge variant={isSelected ? 'primary' : 'default'}>
-                    {team.members.length}人
-                  </Badge>
-                </button>
-              )
-            })}
-          </div>
-        )}
-
-        {selectedTeamIds.map((id) => (
-          <input key={id} type="hidden" name="teamIds" value={id} />
-        ))}
-
-        {state.errors?.teamIds && (
-          <p role="alert" className="mt-2 text-xs text-danger-600">
-            {state.errors.teamIds[0]}
-          </p>
-        )}
+      {/* モード切り替えタブ */}
+      <div className="flex gap-1 p-1 bg-neutral-100 rounded-md">
+        <button
+          type="button"
+          onClick={() => setMatchMode('TEAM')}
+          className={[
+            'flex-1 py-2 text-sm font-medium rounded transition-colors',
+            matchMode === 'TEAM'
+              ? 'bg-neutral-0 text-neutral-900 shadow-sm'
+              : 'text-neutral-500 hover:text-neutral-700',
+          ].join(' ')}
+        >
+          チーム戦
+        </button>
+        <button
+          type="button"
+          onClick={() => setMatchMode('SOLO')}
+          className={[
+            'flex-1 py-2 text-sm font-medium rounded transition-colors',
+            matchMode === 'SOLO'
+              ? 'bg-neutral-0 text-neutral-900 shadow-sm'
+              : 'text-neutral-500 hover:text-neutral-700',
+          ].join(' ')}
+        >
+          個人戦
+        </button>
       </div>
 
-      {/* 投擲順・メンバー順 */}
-      {selectedTeamIds.length >= 2 && (
-        <div className="bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3">
-          <p className="text-xs text-neutral-600 font-medium mb-2">チームの投擲順（選択順）</p>
-          <ol className="list-decimal list-inside text-sm text-neutral-700 space-y-0.5 mb-4">
-            {selectedTeamIds.map((id) => {
-              const team = teams.find((t) => t.id === id)
-              return team ? <li key={id}>{team.name}</li> : null
-            })}
-          </ol>
+      {/* チーム戦 */}
+      {matchMode === 'TEAM' && (
+        <>
+          <div>
+            <p className="text-sm font-medium text-neutral-800 mb-3">
+              参加チームを選択
+              <span className="ml-0.5 text-danger-500" aria-hidden="true">*</span>
+              <span className="ml-2 text-xs font-normal text-neutral-500">（2チーム以上）</span>
+            </p>
 
-          <div className="flex flex-col gap-3">
-            {selectedTeamIds.map((teamId) => {
-              const team = teams.find((t) => t.id === teamId)
-              if (!team || team.members.length <= 1) return null
+            {teams.length === 0 ? (
+              <p className="text-sm text-neutral-500 py-4">
+                チームがありません。先にチームを作成してください。
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {teams.map((team) => {
+                  const isSelected = selectedTeamIds.includes(team.id)
+                  return (
+                    <button
+                      key={team.id}
+                      type="button"
+                      onClick={() => toggleTeam(team.id)}
+                      className={[
+                        'flex items-center justify-between px-4 py-3 rounded-md border text-left transition-colors',
+                        isSelected
+                          ? 'border-brand-500 bg-brand-50 text-brand-700'
+                          : 'border-neutral-300 bg-neutral-0 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50',
+                      ].join(' ')}
+                      aria-pressed={isSelected}
+                      data-testid={`team-button-${team.id}`}
+                    >
+                      <span className="font-medium text-sm">{team.name}</span>
+                      <Badge variant={isSelected ? 'primary' : 'default'}>
+                        {team.members.length}人
+                      </Badge>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
-              const order = memberOrders[teamId] ?? team.members.map((m) => m.userId)
-              const orderedMembers = order
-                .map((uid) => team.members.find((m) => m.userId === uid))
-                .filter(Boolean) as TeamMember[]
+            {selectedTeamIds.map((id) => (
+              <input key={id} type="hidden" name="teamIds" value={id} />
+            ))}
 
-              return (
-                <div key={teamId}>
-                  <p className="text-xs text-neutral-500 mb-1">{team.name} の投擲順</p>
-                  <div className="flex flex-col gap-1">
-                    {orderedMembers.map((member, index) => (
-                      <div
-                        key={member.userId}
-                        className="flex items-center gap-2 bg-neutral-0 border border-neutral-200 rounded px-3 py-1.5"
-                      >
-                        <span className="text-xs text-neutral-400 w-4 shrink-0">{index + 1}</span>
-                        <span className="text-sm text-neutral-700 flex-1">{member.user.name}</span>
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            disabled={index === 0}
-                            onClick={() => moveMember(teamId, index, index - 1)}
-                            className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
-                            aria-label={`${member.user.name}を上に移動`}
-                          >
-                            ▲
-                          </button>
-                          <button
-                            type="button"
-                            disabled={index === orderedMembers.length - 1}
-                            onClick={() => moveMember(teamId, index, index + 1)}
-                            className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
-                            aria-label={`${member.user.name}を下に移動`}
-                          >
-                            ▼
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <input
-                    type="hidden"
-                    name={`memberOrder_${teamId}`}
-                    value={JSON.stringify(order)}
-                  />
-                </div>
-              )
-            })}
+            {state.errors?.teamIds && (
+              <p role="alert" className="mt-2 text-xs text-danger-600">
+                {state.errors.teamIds[0]}
+              </p>
+            )}
           </div>
+
+          {/* 投擲順・メンバー順 */}
+          {selectedTeamIds.length >= 2 && (
+            <div className="bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3">
+              <p className="text-xs text-neutral-600 font-medium mb-2">チームの投擲順（選択順）</p>
+              <ol className="list-decimal list-inside text-sm text-neutral-700 space-y-0.5 mb-4">
+                {selectedTeamIds.map((id) => {
+                  const team = teams.find((t) => t.id === id)
+                  return team ? <li key={id}>{team.name}</li> : null
+                })}
+              </ol>
+
+              <div className="flex flex-col gap-3">
+                {selectedTeamIds.map((teamId) => {
+                  const team = teams.find((t) => t.id === teamId)
+                  if (!team || team.members.length <= 1) return null
+
+                  const order = memberOrders[teamId] ?? team.members.map((m) => m.userId)
+                  const orderedMembers = order
+                    .map((uid) => team.members.find((m) => m.userId === uid))
+                    .filter(Boolean) as TeamMember[]
+
+                  return (
+                    <div key={teamId}>
+                      <p className="text-xs text-neutral-500 mb-1">{team.name} の投擲順</p>
+                      <div className="flex flex-col gap-1">
+                        {orderedMembers.map((member, index) => (
+                          <div
+                            key={member.userId}
+                            className="flex items-center gap-2 bg-neutral-0 border border-neutral-200 rounded px-3 py-1.5"
+                          >
+                            <span className="text-xs text-neutral-400 w-4 shrink-0">{index + 1}</span>
+                            <span className="text-sm text-neutral-700 flex-1">{member.user.name}</span>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => moveMember(teamId, index, index - 1)}
+                                className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                aria-label={`${member.user.name}を上に移動`}
+                              >
+                                ▲
+                              </button>
+                              <button
+                                type="button"
+                                disabled={index === orderedMembers.length - 1}
+                                onClick={() => moveMember(teamId, index, index + 1)}
+                                className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                aria-label={`${member.user.name}を下に移動`}
+                              >
+                                ▼
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <input
+                        type="hidden"
+                        name={`memberOrder_${teamId}`}
+                        value={JSON.stringify(order)}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* 個人戦 */}
+      {matchMode === 'SOLO' && (
+        <div>
+          <p className="text-sm font-medium text-neutral-800 mb-3">
+            参加プレイヤーを選択
+            <span className="ml-0.5 text-danger-500" aria-hidden="true">*</span>
+            <span className="ml-2 text-xs font-normal text-neutral-500">（2人以上、選択順が投擲順）</span>
+          </p>
+
+          {users.length === 0 ? (
+            <p className="text-sm text-neutral-500 py-4">
+              プレイヤーがいません。先にプレイヤーを登録してください。
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {users.map((user) => {
+                const isSelected = selectedPlayerIds.includes(user.id)
+                const order = selectedPlayerIds.indexOf(user.id)
+                return (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={() => togglePlayer(user.id)}
+                    className={[
+                      'flex items-center justify-between px-4 py-3 rounded-md border text-left transition-colors',
+                      isSelected
+                        ? 'border-brand-500 bg-brand-50 text-brand-700'
+                        : 'border-neutral-300 bg-neutral-0 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50',
+                    ].join(' ')}
+                    aria-pressed={isSelected}
+                    data-testid={`player-button-${user.id}`}
+                  >
+                    <span className="font-medium text-sm">{user.name}</span>
+                    {isSelected && (
+                      <Badge variant="primary">{order + 1}番目</Badge>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          {selectedPlayerIds.map((id) => (
+            <input key={id} type="hidden" name="playerIds" value={id} />
+          ))}
+
+          {selectedPlayerIds.length >= 2 && (
+            <div className="mt-3 bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3">
+              <p className="text-xs text-neutral-600 font-medium mb-1">投擲順</p>
+              <ol className="list-decimal list-inside text-sm text-neutral-700 space-y-0.5">
+                {selectedPlayerIds.map((id) => {
+                  const user = users.find((u) => u.id === id)
+                  return user ? <li key={id}>{user.name}</li> : null
+                })}
+              </ol>
+            </div>
+          )}
+
+          {state.errors?.playerIds && (
+            <p role="alert" className="mt-2 text-xs text-danger-600">
+              {state.errors.playerIds[0]}
+            </p>
+          )}
         </div>
       )}
 
-      {/* ルール詳細設定 */}
-      <div>
-        <p className="text-sm font-medium text-neutral-800 mb-3">制限ルール</p>
-        <div className="flex flex-col gap-2">
-          {(
-            [
-              { value: 'NONE', label: '制限なし', desc: '50点到達または全チーム失格まで続ける' },
-              { value: 'TURNS', label: 'ターン制限', desc: '指定ラウンド終了後に最高得点チームが勝利' },
-              { value: 'TIME', label: '時間制限', desc: '指定時間経過後のラウンド終了時に最高得点チームが勝利' },
-            ] as { value: LimitType; label: string; desc: string }[]
-          ).map(({ value, label, desc }) => (
-            <label
-              key={value}
-              className={[
-                'flex items-start gap-3 px-4 py-3 rounded-md border cursor-pointer transition-colors',
-                limitType === value
-                  ? 'border-brand-500 bg-brand-50'
-                  : 'border-neutral-300 bg-neutral-0 hover:border-neutral-400',
-              ].join(' ')}
-            >
-              <input
-                type="radio"
-                name="limitType"
-                value={value}
-                checked={limitType === value}
-                onChange={() => setLimitType(value)}
-                className="mt-0.5 accent-brand-500"
-              />
-              <div>
-                <p className={`text-sm font-medium ${limitType === value ? 'text-brand-700' : 'text-neutral-800'}`}>
-                  {label}
-                </p>
-                <p className="text-xs text-neutral-500 mt-0.5">{desc}</p>
-              </div>
-            </label>
-          ))}
-        </div>
-
-        {/* ターン数入力 */}
-        {limitType === 'TURNS' && (
-          <div className="mt-3 flex items-center gap-3">
-            <input type="hidden" name="turnLimit" value={turnLimit} />
-            <label className="text-sm text-neutral-700 shrink-0">ラウンド数</label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setTurnLimit((v) => Math.max(1, v - 1))}
-                className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
-                aria-label="ラウンド数を減らす"
-              >
-                −
-              </button>
-              <span className="w-12 text-center font-bold text-lg tabular-nums">{turnLimit}</span>
-              <button
-                type="button"
-                onClick={() => setTurnLimit((v) => Math.min(100, v + 1))}
-                className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
-                aria-label="ラウンド数を増やす"
-              >
-                ＋
-              </button>
-            </div>
-            <span className="text-sm text-neutral-500">ラウンド</span>
-          </div>
-        )}
-
-        {/* 時間入力 */}
-        {limitType === 'TIME' && (
-          <div className="mt-3 flex items-center gap-3">
-            <input type="hidden" name="timeLimitMinutes" value={timeLimitMinutes} />
-            <label className="text-sm text-neutral-700 shrink-0">制限時間</label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setTimeLimitMinutes((v) => Math.max(1, v - 5))}
-                className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
-                aria-label="制限時間を減らす"
-              >
-                −
-              </button>
-              <span className="w-12 text-center font-bold text-lg tabular-nums">{timeLimitMinutes}</span>
-              <button
-                type="button"
-                onClick={() => setTimeLimitMinutes((v) => Math.min(180, v + 5))}
-                className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
-                aria-label="制限時間を増やす"
-              >
-                ＋
-              </button>
-            </div>
-            <span className="text-sm text-neutral-500">分</span>
-          </div>
-        )}
-      </div>
+      {/* 制限ルール（共通） */}
+      <LimitRuleSection
+        limitType={limitType}
+        setLimitType={setLimitType}
+        turnLimit={turnLimit}
+        setTurnLimit={setTurnLimit}
+        timeLimitMinutes={timeLimitMinutes}
+        setTimeLimitMinutes={setTimeLimitMinutes}
+      />
 
       {state.message && (
         <p role="alert" className="text-sm text-danger-600">
@@ -289,7 +440,7 @@ export function CreateMatchForm({ teams }: CreateMatchFormProps) {
           type="submit"
           variant="primary"
           isLoading={isPending}
-          disabled={selectedTeamIds.length < 2}
+          disabled={!canSubmit}
           data-testid="start-match-submit"
         >
           試合を開始
