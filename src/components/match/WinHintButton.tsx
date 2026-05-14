@@ -48,7 +48,7 @@ export function WinHintButton({ currentTotal }: WinHintButtonProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-5 h-5 rounded-full bg-warning-400 text-neutral-0 text-xs font-bold leading-none flex items-center justify-center hover:bg-warning-500 transition-colors"
+        className="w-[19px] h-[19px] rounded-full bg-warning-400 text-neutral-0 text-xs font-bold leading-none flex items-center justify-center hover:bg-warning-500 transition-colors"
         aria-label="2投勝利の組み合わせを表示"
         title="2投勝利ヒント"
       >
