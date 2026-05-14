@@ -122,8 +122,15 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
         {!watchMode && currentThrower && (
           <aside
             aria-label="投擲記録"
-            className="lg:sticky lg:top-20 lg:self-start"
+            className="lg:sticky lg:top-20 lg:self-start flex flex-col gap-2"
           >
+            {/* CurrentThrower と高さを揃えるスペーサー（lg以上のみ表示） */}
+            <div
+              aria-hidden="true"
+              className="hidden lg:flex invisible bg-brand-50 border border-brand-200 rounded-lg px-3 py-1.5 items-center"
+            >
+              &nbsp;
+            </div>
             <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-4">
               <ThrowRecorder
                 shareCode={match.shareCode}
