@@ -152,6 +152,9 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
   // 個人戦用
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([])
 
+  // 共通：ゲーム数
+  const [totalSets, setTotalSets] = useState(2)
+
   // 共通：制限ルール
   const [limitType, setLimitType] = useState<LimitType>('NONE')
   const [turnLimit, setTurnLimit] = useState(12)
@@ -418,6 +421,37 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
           )}
         </div>
       )}
+
+      {/* ゲーム数（共通） */}
+      <div>
+        <p className="text-sm font-medium text-neutral-800 mb-3">ゲーム数</p>
+        <div className="flex items-center gap-3">
+          <input type="hidden" name="totalSets" value={totalSets} />
+          <button
+            type="button"
+            onClick={() => setTotalSets((v) => Math.max(1, v - 1))}
+            className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
+            aria-label="ゲーム数を減らす"
+          >
+            −
+          </button>
+          <span className="w-12 text-center font-bold text-lg tabular-nums">{totalSets}</span>
+          <button
+            type="button"
+            onClick={() => setTotalSets((v) => Math.min(10, v + 1))}
+            className="w-8 h-8 rounded border border-neutral-300 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center text-lg font-bold"
+            aria-label="ゲーム数を増やす"
+          >
+            ＋
+          </button>
+          <span className="text-sm text-neutral-500">ゲーム</span>
+        </div>
+        {totalSets > 1 && (
+          <p className="mt-2 text-xs text-neutral-500">
+            2ゲーム目以降はチームとプレイヤーの投擲順が逆順になります
+          </p>
+        )}
+      </div>
 
       {/* 制限ルール（共通） */}
       <LimitRuleSection
