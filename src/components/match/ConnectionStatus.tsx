@@ -28,19 +28,17 @@ const CONFIG: Record<Status, { label: string; dotClass: string; textClass: strin
 }
 
 export function ConnectionStatus({ status }: ConnectionStatusProps) {
-  const { label, dotClass, textClass } = CONFIG[status]
+  const { label, dotClass } = CONFIG[status]
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="inline-flex items-center gap-1.5"
+      aria-label={label}
+      title={label}
+      className="inline-flex items-center"
     >
-      <span
-        className={`inline-block w-2 h-2 rounded-full shrink-0 ${dotClass}`}
-        aria-hidden="true"
-      />
-      <span className={`text-xs font-medium ${textClass}`}>{label}</span>
+      <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
     </div>
   )
 }
