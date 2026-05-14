@@ -189,6 +189,7 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
             <ScoreSheetView
               data={sheet}
               onEditCell={!watchMode && !isFinished ? (throwId, skittles, rect) => setEditTarget({ throwId, currentSkittles: skittles, anchorRect: rect }) : undefined}
+              editingThrowId={editTarget?.throwId}
             />
           </div>
           {editTarget && (

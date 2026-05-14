@@ -13,6 +13,8 @@ type ScoreSheetViewProps = {
   matchDate?: string
   /** 記録済みセルをクリックしたときのコールバック */
   onEditCell?: (throwId: string, skittles: number[], rect: DOMRect) => void
+  /** 編集中の throwId（ハイライト用） */
+  editingThrowId?: string | null
 }
 
 const RANK_LABELS = ['1位', '2位', '3位', '4位', '5位', '6位', '7位', '8位']
@@ -25,6 +27,7 @@ export function ScoreSheetView({
   title = 'モルック得点表',
   matchDate,
   onEditCell,
+  editingThrowId,
 }: ScoreSheetViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -64,6 +67,7 @@ export function ScoreSheetView({
                 columns={data.columns}
                 currentCell={data.currentCell}
                 onEditCell={onEditCell}
+                editingThrowId={editingThrowId}
               />
             ))}
 

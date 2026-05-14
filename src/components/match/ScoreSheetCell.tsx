@@ -6,6 +6,8 @@ type ScoreSheetCellProps = {
   cell: Cell
   /** 現在投擲セルとしてハイライトするか */
   isCurrent?: boolean
+  /** 編集ポップオーバーが開いているセルか */
+  isEditing?: boolean
   /** 記録済みセルのクリック（編集用）。クリックされたセルの DOMRect を渡す */
   onClick?: (rect: DOMRect) => void
   /** 列の失格状態 */
@@ -28,6 +30,7 @@ type ScoreSheetCellProps = {
 export function ScoreSheetCell({
   cell,
   isCurrent = false,
+  isEditing = false,
   onClick,
   isTeamDisqualified = false,
 }: ScoreSheetCellProps) {
@@ -48,11 +51,16 @@ export function ScoreSheetCell({
     baseClass.push('bg-brand-100 ring-2 ring-brand-500 ring-inset z-10')
   }
 
+  // 編集中セル（アンバーでハイライト）
+  if (isEditing) {
+    baseClass.push('bg-warning-100 ring-2 ring-warning-500 ring-inset z-10')
+  }
+
   const isEditable = onClick && cell.throwId !== null &&
     (cell.value.kind === 'score' || cell.value.kind === 'miss' ||
      cell.value.kind === 'reset' || cell.value.kind === 'goal')
 
-  if (isEditable) {
+  if (isEditable && !isEditing) {
     baseClass.push('cursor-pointer hover:bg-brand-50 hover:ring-1 hover:ring-brand-300 hover:ring-inset')
   }
 

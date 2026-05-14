@@ -35,27 +35,38 @@ export function ScoreCellEditPopover({
   // ポップオーバーの fixed 位置をセル座標から算出
   const popoverStyle = useMemo(() => {
     const POPOVER_W = 288 // w-72 = 18rem = 288px
-    const POPOVER_H = 320 // 概算高さ
-    const GAP = 8
+    const POPOVER_H = 380 // 概算高さ（余裕を持たせる）
+    const GAP = 12
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1024
     const vh = typeof window !== 'undefined' ? window.innerHeight : 768
 
     const { top, bottom, left, right } = target.anchorRect
 
-    // 下に出す余裕があれば下、なければ上
+    // 縦方向: セルの下に十分な余裕があれば下、なければ上
+    // セルと重ならないよう bottom/top から GAP 分離す
     let topPx: number
     if (bottom + POPOVER_H + GAP <= vh) {
       topPx = bottom + GAP
+    } else if (top - POPOVER_H - GAP >= 0) {
+      topPx = top - POPOVER_H - GAP
     } else {
-      topPx = Math.max(GAP, top - POPOVER_H - GAP)
+      // 上下どちらも足りない場合はビューポート内に収める
+      topPx = Math.max(GAP, vh - POPOVER_H - GAP)
     }
 
-    // セル中央揃えを基準に左右を調整
+    // 横方向: セル中央揃えを基準に左右を調整
     const cellCenterX = (left + right) / 2
     let leftPx = cellCenterX - POPOVER_W / 2
-    leftPx = Math.max(GAP, Math.min(leftPx, vw - POPOVER_W - GAP))
 
-    return { position: 'fixed' as const, top: topPx, left: leftPx, width: POPOVER_W }
+    // 画面右端にかかる場合は左にずらす（セル右端を超えないよう）
+    if (leftPx + POPOVER_W + GAP > vw) {
+      // セル左端から右方向に出せるか試みる、無理なら左端を基準に右寄せ
+      leftPx = Math.max(GAP, vw - POPOVER_W - GAP)
+    }
+    // 画面左端チェック
+    leftPx = Math.max(GAP, leftPx)
+
+    return { position: 'fixed' as const, top: topPx, left: leftPx, width: POPOVER_W, zIndex: 50 }
   }, [target.anchorRect])
 
   // 現在値からモードと選択値を推定

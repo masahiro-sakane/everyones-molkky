@@ -9,6 +9,7 @@ type ScoreSheetRowProps = {
   columns: TeamColumn[]
   currentCell: CurrentCellPosition | null
   onEditCell?: (throwId: string, skittles: number[], rect: DOMRect) => void
+  editingThrowId?: string | null
 }
 
 /**
@@ -20,6 +21,7 @@ export const ScoreSheetRow = memo(function ScoreSheetRow({
   columns,
   currentCell,
   onEditCell,
+  editingThrowId,
 }: ScoreSheetRowProps) {
   return (
     <tr className="border-b border-neutral-200">
@@ -47,6 +49,7 @@ export const ScoreSheetRow = memo(function ScoreSheetRow({
             rowIndex={row.rowIndex}
             hasThrow={hasThrow}
             onEditCell={onEditCell}
+            editingThrowId={editingThrowId}
           />
         )
       })}
@@ -61,6 +64,7 @@ type TeamRowSectionProps = {
   currentCell: CurrentCellPosition | null
   rowIndex: number
   onEditCell?: (throwId: string, skittles: number[], rect: DOMRect) => void
+  editingThrowId?: string | null
 }
 
 function TeamRowSection({
@@ -71,6 +75,7 @@ function TeamRowSection({
   rowIndex,
   hasThrow,
   onEditCell,
+  editingThrowId,
 }: TeamRowSectionProps & { hasThrow: boolean }) {
   return (
     <>
@@ -81,6 +86,8 @@ function TeamRowSection({
           currentCell.teamId === column.teamId &&
           currentCell.userId === cell.userId &&
           cell.value.kind === 'empty'
+
+        const isEditing = !!editingThrowId && cell.throwId === editingThrowId
 
         const throwId = cell.throwId
         const handleClick =
@@ -103,6 +110,7 @@ function TeamRowSection({
             key={`${column.teamId}-${i}`}
             cell={cell}
             isCurrent={isCurrent}
+            isEditing={isEditing}
             isTeamDisqualified={column.isDisqualified}
             onClick={handleClick}
           />
