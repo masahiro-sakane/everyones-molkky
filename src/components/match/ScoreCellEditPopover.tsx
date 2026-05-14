@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Button } from '@/components/ui/Button'
 
 export type EditTarget = {
   throwId: string
   /** 現在の skittlesKnocked（修正前の値） */
   currentSkittles: number[]
+  /** クリックされたセルの画面座標 */
+  anchorRect: DOMRect
 }
 
 type ScoreCellEditPopoverProps = {
@@ -29,6 +31,32 @@ export function ScoreCellEditPopover({
   onCancel,
 }: ScoreCellEditPopoverProps) {
   const ref = useRef<HTMLDivElement>(null)
+
+  // ポップオーバーの fixed 位置をセル座標から算出
+  const popoverStyle = useMemo(() => {
+    const POPOVER_W = 288 // w-72 = 18rem = 288px
+    const POPOVER_H = 320 // 概算高さ
+    const GAP = 8
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1024
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 768
+
+    const { top, bottom, left, right } = target.anchorRect
+
+    // 下に出す余裕があれば下、なければ上
+    let topPx: number
+    if (bottom + POPOVER_H + GAP <= vh) {
+      topPx = bottom + GAP
+    } else {
+      topPx = Math.max(GAP, top - POPOVER_H - GAP)
+    }
+
+    // セル中央揃えを基準に左右を調整
+    const cellCenterX = (left + right) / 2
+    let leftPx = cellCenterX - POPOVER_W / 2
+    leftPx = Math.max(GAP, Math.min(leftPx, vw - POPOVER_W - GAP))
+
+    return { position: 'fixed' as const, top: topPx, left: leftPx, width: POPOVER_W }
+  }, [target.anchorRect])
 
   // 現在値からモードと選択値を推定
   const deriveInitial = (skittles: number[]): { mode: InputMode; selected: number | null } => {
@@ -110,7 +138,8 @@ export function ScoreCellEditPopover({
   return (
     <div
       ref={ref}
-      className="absolute z-50 bg-neutral-0 border border-neutral-300 rounded-xl shadow-xl p-4 w-72"
+      className="z-50 bg-neutral-0 border border-neutral-300 rounded-xl shadow-xl p-4"
+      style={popoverStyle}
       role="dialog"
       aria-label="得点を修正"
     >

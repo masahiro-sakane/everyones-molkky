@@ -12,7 +12,7 @@ type ScoreSheetViewProps = {
   /** 試合日（ヘッダー右に表示） */
   matchDate?: string
   /** 記録済みセルをクリックしたときのコールバック */
-  onEditCell?: (throwId: string, skittles: number[]) => void
+  onEditCell?: (throwId: string, skittles: number[], rect: DOMRect) => void
 }
 
 const RANK_LABELS = ['1位', '2位', '3位', '4位', '5位', '6位', '7位', '8位']

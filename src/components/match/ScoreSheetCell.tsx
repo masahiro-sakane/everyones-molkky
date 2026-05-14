@@ -6,8 +6,8 @@ type ScoreSheetCellProps = {
   cell: Cell
   /** 現在投擲セルとしてハイライトするか */
   isCurrent?: boolean
-  /** 記録済みセルのクリック（編集用） */
-  onClick?: () => void
+  /** 記録済みセルのクリック（編集用）。クリックされたセルの DOMRect を渡す */
+  onClick?: (rect: DOMRect) => void
   /** 列の失格状態 */
   isTeamDisqualified?: boolean
 }
@@ -43,10 +43,6 @@ export function ScoreSheetCell({
     baseClass.push('bg-neutral-100 text-neutral-300')
   }
 
-  // 現在投擲セル
-  if (isCurrent) {
-    baseClass.push('bg-brand-100 ring-2 ring-brand-500 ring-inset z-10 font-bold')
-  }
 
   const isEditable = onClick && cell.throwId !== null &&
     (cell.value.kind === 'score' || cell.value.kind === 'miss' ||
@@ -61,7 +57,7 @@ export function ScoreSheetCell({
       className={baseClass.join(' ')}
       data-testid={`cell-${cell.teamId}-${cell.throwIndex}`}
       aria-current={isCurrent ? 'true' : undefined}
-      onClick={isEditable ? onClick : undefined}
+      onClick={isEditable ? (e) => onClick!((e.currentTarget as HTMLElement).getBoundingClientRect()) : undefined}
       role={isEditable ? 'button' : undefined}
       title={isEditable ? '得点を修正する' : undefined}
     >

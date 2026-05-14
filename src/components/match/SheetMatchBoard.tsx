@@ -127,24 +127,20 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
       <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_360px] gap-4">
         {/* スコアシート */}
         <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2">
-          <div ref={sheetContainerRef} className="relative">
+          <div ref={sheetContainerRef}>
             <ScoreSheetView
               data={sheet}
-              onEditCell={!watchMode && !isFinished ? (throwId, skittles) => setEditTarget({ throwId, currentSkittles: skittles }) : undefined}
+              onEditCell={!watchMode && !isFinished ? (throwId, skittles, rect) => setEditTarget({ throwId, currentSkittles: skittles, anchorRect: rect }) : undefined}
             />
-            {editTarget && (
-              <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
-                <div className="pointer-events-auto">
-                  <ScoreCellEditPopover
-                    target={editTarget}
-                    shareCode={match.shareCode}
-                    onDone={() => { setEditTarget(null); router.refresh() }}
-                    onCancel={() => setEditTarget(null)}
-                  />
-                </div>
-              </div>
-            )}
           </div>
+          {editTarget && (
+            <ScoreCellEditPopover
+              target={editTarget}
+              shareCode={match.shareCode}
+              onDone={() => { setEditTarget(null); router.refresh() }}
+              onCancel={() => setEditTarget(null)}
+            />
+          )}
           <div className="flex items-center justify-end gap-2 pt-1">
             <ShareButton shareCode={match.shareCode} />
             <ConnectionStatus status={connStatus} />

@@ -8,7 +8,7 @@ type ScoreSheetRowProps = {
   row: Row
   columns: TeamColumn[]
   currentCell: CurrentCellPosition | null
-  onEditCell?: (throwId: string, skittles: number[]) => void
+  onEditCell?: (throwId: string, skittles: number[], rect: DOMRect) => void
 }
 
 /**
@@ -60,7 +60,7 @@ type TeamRowSectionProps = {
   cumulative: ReturnType<Row['cumulativeByTeam']['get']>
   currentCell: CurrentCellPosition | null
   rowIndex: number
-  onEditCell?: (throwId: string, skittles: number[]) => void
+  onEditCell?: (throwId: string, skittles: number[], rect: DOMRect) => void
 }
 
 function TeamRowSection({
@@ -85,7 +85,7 @@ function TeamRowSection({
         const throwId = cell.throwId
         const handleClick =
           onEditCell && throwId
-            ? () => {
+            ? (rect: DOMRect) => {
                 const skittles =
                   cell.value.kind === 'miss' || cell.value.kind === 'disqualified'
                     ? []
@@ -94,7 +94,7 @@ function TeamRowSection({
                       : cell.value.kind === 'reset'
                         ? [cell.value.score]
                         : [] // goal はミス扱いで開く
-                onEditCell(throwId, skittles)
+                onEditCell(throwId, skittles, rect)
               }
             : undefined
 
