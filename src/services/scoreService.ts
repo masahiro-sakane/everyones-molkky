@@ -167,7 +167,7 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
 
       // 全セット数を確認し、全ゲーム完了時のみ match を FINISHED にする
       const allSets = await tx.set.findMany({ where: { matchId: match.id } })
-      const finishedSetsCount = allSets.filter((s) => s.status === 'FINISHED').length + 1 // +1: 今終了したセット
+      const finishedSetsCount = allSets.filter((s) => s.status === 'FINISHED').length
 
       if (finishedSetsCount >= match.totalSets) {
         await tx.match.update({
