@@ -13,6 +13,7 @@ import { DisqualificationAlert } from './DisqualificationAlert'
 import { ShareButton } from './ShareButton'
 import { ConnectionStatus } from './ConnectionStatus'
 import { MatchLimitStatus } from './MatchLimitStatus'
+import { SetTransitionBanner } from './SetTransitionBanner'
 
 type MatchBoardProps = {
   match: MatchData
@@ -33,6 +34,7 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
     isFinished,
     currentRound,
     remainingRounds,
+    setTransitionInfo,
   } = useMatch(match)
 
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
@@ -124,6 +126,15 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
           onDismiss={() => dismissAlert(team.teamId)}
         />
       ))}
+
+      {/* セット間バナー（ゲーム完了・次ゲーム待ち） */}
+      {setTransitionInfo && (
+        <SetTransitionBanner
+          shareCode={match.shareCode}
+          info={setTransitionInfo}
+          watchMode={watchMode}
+        />
+      )}
 
       {/* 現在の投擲者 */}
       {currentThrower && (

@@ -65,6 +65,7 @@ export type MatchData = {
   limitType: 'NONE' | 'TURNS' | 'TIME'
   turnLimit: number | null
   timeLimitMinutes: number | null
+  totalSets: number
   startedAt: Date | string | null
   matchTeams: MatchTeam[]
   sets: Set[]
@@ -264,6 +265,21 @@ export function useMatch(match: MatchData) {
   // 勝者
   const winnerTeamId = currentSet?.winnerId ?? null
 
+  // セット間遷移状態: 直近セットがFINISHEDで試合がまだ続いている
+  const setTransitionInfo = useMemo(() => {
+    if (match.status !== 'IN_PROGRESS') return null
+    const lastSet = match.sets.at(-1)
+    if (!lastSet || lastSet.status !== 'FINISHED') return null
+    const finishedSets = match.sets.filter((s) => s.status === 'FINISHED').length
+    return {
+      completedSetNumber: lastSet.setNumber,
+      totalSets: match.totalSets,
+      winnerId: lastSet.winnerId,
+      winnerName: match.matchTeams.find((mt) => mt.teamId === lastSet.winnerId)?.team.name ?? null,
+      remainingSets: match.totalSets - finishedSets,
+    }
+  }, [match.status, match.sets, match.totalSets, match.matchTeams])
+
   // 現在の経過ラウンド数（全チームが1回ずつ投擲したラウンド）
   const currentRound = useMemo(() => {
     const latestTurnNumber = currentSet?.turns.at(-1)?.turnNumber ?? 0
@@ -288,5 +304,6 @@ export function useMatch(match: MatchData) {
     isFinished: match.status === 'FINISHED',
     currentRound,
     remainingRounds,
+    setTransitionInfo,
   }
 }

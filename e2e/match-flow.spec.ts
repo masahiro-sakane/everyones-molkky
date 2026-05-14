@@ -7,8 +7,8 @@ import { test, expect } from '@playwright/test'
 test.describe('試合フロー', () => {
   test('ホームページが表示される', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'みんなのモルック' })).toBeVisible()
     await expect(page.getByRole('link', { name: '試合を始める' }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: 'みんなのモルック' })).toBeVisible()
   })
 
   test('ナビゲーションが機能する', async ({ page }) => {

@@ -28,6 +28,7 @@ export default async function WatchPage({ params }: PageProps) {
     limitType: raw.limitType as 'NONE' | 'TURNS' | 'TIME',
     turnLimit: raw.turnLimit,
     timeLimitMinutes: raw.timeLimitMinutes,
+    totalSets: raw.totalSets,
     startedAt: raw.startedAt,
     matchTeams: raw.matchTeams.map((mt) => ({
       teamId: mt.teamId,

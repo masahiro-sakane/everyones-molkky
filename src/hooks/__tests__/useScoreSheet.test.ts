@@ -74,6 +74,7 @@ function buildMatch(opts: {
     limitType: 'NONE',
     turnLimit: null,
     timeLimitMinutes: null,
+    totalSets: 1,
     startedAt: null,
     matchTeams: teams.map((t, i) => ({
       teamId: t.id,
@@ -498,6 +499,7 @@ describe('useScoreSheet', () => {
         limitType: 'NONE',
         turnLimit: null,
         timeLimitMinutes: null,
+        totalSets: 1,
         startedAt: null,
         matchTeams: [
           {

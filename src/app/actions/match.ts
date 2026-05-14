@@ -25,6 +25,7 @@ export async function createMatchAction(
     const limitTypeRaw = formData.get('limitType') as string | null
     const turnLimitRaw = formData.get('turnLimit')
     const timeLimitMinutesRaw = formData.get('timeLimitMinutes')
+    const totalSetsRaw = formData.get('totalSets')
 
     const parsed = createSoloMatchSchema.safeParse({
       matchType: 'SOLO',
@@ -32,6 +33,7 @@ export async function createMatchAction(
       limitType: limitTypeRaw ?? 'NONE',
       turnLimit: turnLimitRaw ? Number(turnLimitRaw) : undefined,
       timeLimitMinutes: timeLimitMinutesRaw ? Number(timeLimitMinutesRaw) : undefined,
+      totalSets: totalSetsRaw ? Number(totalSetsRaw) : undefined,
     })
     if (!parsed.success) {
       return { errors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
@@ -72,6 +74,7 @@ export async function createMatchAction(
   const limitTypeRaw = formData.get('limitType') as string | null
   const turnLimitRaw = formData.get('turnLimit')
   const timeLimitMinutesRaw = formData.get('timeLimitMinutes')
+  const totalSetsRaw = formData.get('totalSets')
 
   const parsed = createMatchSchema.safeParse({
     matchType: 'TEAM',
@@ -80,6 +83,7 @@ export async function createMatchAction(
     limitType: limitTypeRaw ?? 'NONE',
     turnLimit: turnLimitRaw ? Number(turnLimitRaw) : undefined,
     timeLimitMinutes: timeLimitMinutesRaw ? Number(timeLimitMinutesRaw) : undefined,
+    totalSets: totalSetsRaw ? Number(totalSetsRaw) : undefined,
   })
   if (!parsed.success) {
     return {
