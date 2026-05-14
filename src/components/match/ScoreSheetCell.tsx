@@ -43,6 +43,10 @@ export function ScoreSheetCell({
     baseClass.push('bg-neutral-100 text-neutral-300')
   }
 
+  // 現在投擲セル
+  if (isCurrent) {
+    baseClass.push('bg-warning-50 ring-2 ring-warning-400 ring-inset z-10')
+  }
 
   const isEditable = onClick && cell.throwId !== null &&
     (cell.value.kind === 'score' || cell.value.kind === 'miss' ||
