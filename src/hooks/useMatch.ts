@@ -104,17 +104,15 @@ export type ThrowHistoryEntry = {
 }
 
 /**
- * memberOrderに従ってメンバーを並べ替える
+ * memberOrderに従ってメンバーをフィルタリング・並べ替える
  * memberOrderが空または未指定の場合はそのままの順序を返す
+ * memberOrderに含まれないメンバーはこの試合から除外される
  */
 function sortMembers(members: TeamMember[], memberOrder: string[]): TeamMember[] {
   if (memberOrder.length === 0) return members
-  const orderMap = new Map(memberOrder.map((id, i) => [id, i]))
-  return [...members].sort((a, b) => {
-    const ai = orderMap.get(a.userId) ?? members.indexOf(a)
-    const bi = orderMap.get(b.userId) ?? members.indexOf(b)
-    return ai - bi
-  })
+  return memberOrder
+    .map((id) => members.find((m) => m.userId === id))
+    .filter((m): m is TeamMember => m !== undefined)
 }
 
 /**
@@ -267,8 +265,8 @@ export function useMatch(match: MatchData) {
 
   // セット間遷移状態: 直近セットがFINISHEDで試合がまだ続いている
   const setTransitionInfo = useMemo(() => {
-    if (match.status !== 'IN_PROGRESS') return null
     const lastSet = match.sets.at(-1)
+    if (match.status !== 'IN_PROGRESS') return null
     if (!lastSet || lastSet.status !== 'FINISHED') return null
     const finishedSets = match.sets.filter((s) => s.status === 'FINISHED').length
     return {

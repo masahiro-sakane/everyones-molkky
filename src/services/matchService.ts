@@ -325,5 +325,39 @@ export async function getMatchWithScores(shareCode: string) {
       },
     },
   })
-  return match
+  if (!match) return null
+
+  // memberOrder に含まれる全ユーザーIDを収集（チーム未所属ユーザーを含む）
+  const allMemberOrderIds = match.matchTeams.flatMap((mt) => mt.memberOrder as string[])
+  const extraUserIds = allMemberOrderIds.filter(
+    (uid) => !match.matchTeams.some((mt) => mt.team.members.some((m) => m.userId === uid))
+  )
+
+  if (extraUserIds.length === 0) return match
+
+  // チーム未所属だが memberOrder に含まれるユーザーを取得
+  const extraUsers = await db.user.findMany({ where: { id: { in: extraUserIds } } })
+
+  // 各 matchTeam の team.members を memberOrder ベースで補完
+  const enrichedMatchTeams = match.matchTeams.map((mt) => {
+    const memberOrderIds = mt.memberOrder as string[]
+    const extraForTeam = memberOrderIds
+      .filter((uid) => !mt.team.members.some((m) => m.userId === uid))
+      .map((uid) => {
+        const user = extraUsers.find((u) => u.id === uid)
+        if (!user) return null
+        return { userId: uid, role: 'member' as const, user }
+      })
+      .filter((m): m is NonNullable<typeof m> => m !== null)
+
+    return {
+      ...mt,
+      team: {
+        ...mt.team,
+        members: [...mt.team.members, ...extraForTeam],
+      },
+    }
+  })
+
+  return { ...match, matchTeams: enrichedMatchTeams }
 }

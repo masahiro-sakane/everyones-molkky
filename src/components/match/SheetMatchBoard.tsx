@@ -14,6 +14,7 @@ import { ConnectionStatus } from './ConnectionStatus'
 import { MatchLimitStatus } from './MatchLimitStatus'
 import { WinnerBanner } from './WinnerBanner'
 import { ScoreCellEditPopover, type EditTarget } from './ScoreCellEditPopover'
+import { SetTransitionBanner } from './SetTransitionBanner'
 
 type SheetMatchBoardProps = {
   match: MatchData
@@ -76,9 +77,19 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
   const currentThrower = matchState.currentThrower
   const nextThrower = matchState.nextThrower
   const isFinished = matchState.isFinished && !!matchState.winnerTeamId
+  const setTransitionInfo = matchState.setTransitionInfo
 
   return (
     <div className="flex flex-col gap-2">
+      {/* セット間バナー（ゲーム完了・次ゲーム待ち） */}
+      {setTransitionInfo && (
+        <SetTransitionBanner
+          shareCode={match.shareCode}
+          info={setTransitionInfo}
+          watchMode={watchMode}
+        />
+      )}
+
       {/* 試合終了バナー */}
       {isFinished && (
         <WinnerBanner

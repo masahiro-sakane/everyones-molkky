@@ -24,19 +24,17 @@ type TeamMember = {
 }
 
 /**
- * memberOrder に従ってメンバーを並び替える
+ * memberOrder に従ってメンバーをフィルタリング・並び替える
+ * memberOrderに含まれないメンバーはこの試合から除外される
  */
 function sortMembers<T extends TeamMember>(
   members: T[],
   memberOrder: string[]
 ): T[] {
   if (memberOrder.length === 0) return members
-  const orderMap = new Map(memberOrder.map((id, i) => [id, i]))
-  return [...members].sort((a, b) => {
-    const ai = orderMap.get(a.userId) ?? members.indexOf(a)
-    const bi = orderMap.get(b.userId) ?? members.indexOf(b)
-    return ai - bi
-  })
+  return memberOrder
+    .map((id) => members.find((m) => m.userId === id))
+    .filter((m): m is T => m !== undefined)
 }
 
 /**

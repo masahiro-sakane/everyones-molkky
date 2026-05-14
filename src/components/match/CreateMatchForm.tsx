@@ -147,6 +147,7 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
 
   // チーム戦用
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([])
+  // teamId → この試合に参加するユーザーIDの配列（投擲順）
   const [memberOrders, setMemberOrders] = useState<Record<string, string[]>>({})
 
   // 個人戦用
@@ -161,23 +162,29 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState(20)
 
   const toggleTeam = (teamId: string) => {
-    setSelectedTeamIds((prev) => {
-      if (prev.includes(teamId)) {
-        const next = prev.filter((id) => id !== teamId)
-        setMemberOrders((orders) => {
-          const { [teamId]: _, ...rest } = orders
-          return rest
-        })
-        return next
-      }
+    if (selectedTeamIds.includes(teamId)) {
+      setSelectedTeamIds((prev) => prev.filter((id) => id !== teamId))
+      setMemberOrders((orders) => {
+        const { [teamId]: _, ...rest } = orders
+        return rest
+      })
+    } else {
+      setSelectedTeamIds((prev) => [...prev, teamId])
       const team = teams.find((t) => t.id === teamId)
-      if (team) {
-        setMemberOrders((orders) => ({
-          ...orders,
-          [teamId]: team.members.map((m) => m.userId),
-        }))
+      setMemberOrders((orders) => ({
+        ...orders,
+        [teamId]: team ? team.members.map((m) => m.userId) : [],
+      }))
+    }
+  }
+
+  const toggleMember = (teamId: string, userId: string) => {
+    setMemberOrders((orders) => {
+      const current = orders[teamId] ?? []
+      if (current.includes(userId)) {
+        return { ...orders, [teamId]: current.filter((id) => id !== userId) }
       }
-      return [...prev, teamId]
+      return { ...orders, [teamId]: [...current, userId] }
     })
   }
 
@@ -200,7 +207,9 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
   }
 
   const canSubmit =
-    matchMode === 'TEAM' ? selectedTeamIds.length >= 2 : selectedPlayerIds.length >= 2
+    matchMode === 'TEAM'
+      ? selectedTeamIds.length >= 2 && selectedTeamIds.every((id) => (memberOrders[id]?.length ?? 0) >= 1)
+      : selectedPlayerIds.length >= 2
 
   return (
     <form action={action} className="flex flex-col gap-6">
@@ -287,70 +296,113 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
             )}
           </div>
 
-          {/* 投擲順・メンバー順 */}
+          {/* チームごとのメンバー選択・投擲順 */}
+          {selectedTeamIds.length >= 1 && (
+            <div className="flex flex-col gap-4">
+              {selectedTeamIds.map((teamId) => {
+                const team = teams.find((t) => t.id === teamId)
+                if (!team) return null
+
+                const selectedIds = memberOrders[teamId] ?? []
+
+                return (
+                  <div key={teamId} className="bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3">
+                    <p className="text-xs font-medium text-neutral-700 mb-2">
+                      {team.name} — 参加メンバーと投擲順
+                    </p>
+
+                    {/* ユーザー選択 */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mb-3">
+                      {users.map((user) => {
+                        const isSelected = selectedIds.includes(user.id)
+                        const orderIndex = selectedIds.indexOf(user.id)
+                        return (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => toggleMember(teamId, user.id)}
+                            className={[
+                              'flex items-center justify-between px-3 py-2 rounded border text-sm transition-colors',
+                              isSelected
+                                ? 'border-brand-500 bg-brand-50 text-brand-700'
+                                : 'border-neutral-200 bg-neutral-0 text-neutral-500 hover:border-neutral-400',
+                            ].join(' ')}
+                            aria-pressed={isSelected}
+                          >
+                            <span className="truncate">{user.name}</span>
+                            {isSelected && (
+                              <span className="ml-1 text-xs font-bold shrink-0">{orderIndex + 1}</span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {/* 選択済みメンバーの投擲順並び替え */}
+                    {selectedIds.length >= 2 && (
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs text-neutral-500 mb-1">投擲順（ドラッグ不可の場合は▲▼で並び替え）</p>
+                        {selectedIds.map((uid, index) => {
+                          const user = users.find((u) => u.id === uid)
+                          if (!user) return null
+                          return (
+                            <div
+                              key={uid}
+                              className="flex items-center gap-2 bg-neutral-0 border border-neutral-100 rounded px-2 py-1.5"
+                            >
+                              <span className="text-xs text-neutral-400 w-4 shrink-0">{index + 1}</span>
+                              <span className="text-sm text-neutral-700 flex-1">{user.name}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  disabled={index === 0}
+                                  onClick={() => moveMember(teamId, index, index - 1)}
+                                  className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  aria-label={`${user.name}を上に移動`}
+                                >
+                                  ▲
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={index === selectedIds.length - 1}
+                                  onClick={() => moveMember(teamId, index, index + 1)}
+                                  className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  aria-label={`${user.name}を下に移動`}
+                                >
+                                  ▼
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {selectedIds.length === 0 && (
+                      <p className="text-xs text-danger-600">1人以上選択してください</p>
+                    )}
+
+                    <input
+                      type="hidden"
+                      name={`memberOrder_${teamId}`}
+                      value={JSON.stringify(selectedIds)}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* チームの投擲順（2チーム以上選択時） */}
           {selectedTeamIds.length >= 2 && (
             <div className="bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3">
               <p className="text-xs text-neutral-600 font-medium mb-2">チームの投擲順（選択順）</p>
-              <ol className="list-decimal list-inside text-sm text-neutral-700 space-y-0.5 mb-4">
+              <ol className="list-decimal list-inside text-sm text-neutral-700 space-y-0.5">
                 {selectedTeamIds.map((id) => {
                   const team = teams.find((t) => t.id === id)
                   return team ? <li key={id}>{team.name}</li> : null
                 })}
               </ol>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {selectedTeamIds.map((teamId) => {
-                  const team = teams.find((t) => t.id === teamId)
-                  if (!team || team.members.length <= 1) return null
-
-                  const order = memberOrders[teamId] ?? team.members.map((m) => m.userId)
-                  const orderedMembers = order
-                    .map((uid) => team.members.find((m) => m.userId === uid))
-                    .filter(Boolean) as TeamMember[]
-
-                  return (
-                    <div key={teamId} className="bg-neutral-0 border border-neutral-200 rounded-md p-3">
-                      <p className="text-xs font-medium text-neutral-600 mb-2">{team.name} の投擲順</p>
-                      <div className="flex flex-col gap-1">
-                        {orderedMembers.map((member, index) => (
-                          <div
-                            key={member.userId}
-                            className="flex items-center gap-2 border border-neutral-100 rounded px-2 py-1.5"
-                          >
-                            <span className="text-xs text-neutral-400 w-4 shrink-0">{index + 1}</span>
-                            <span className="text-sm text-neutral-700 flex-1">{member.user.name}</span>
-                            <div className="flex gap-1">
-                              <button
-                                type="button"
-                                disabled={index === 0}
-                                onClick={() => moveMember(teamId, index, index - 1)}
-                                className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
-                                aria-label={`${member.user.name}を上に移動`}
-                              >
-                                ▲
-                              </button>
-                              <button
-                                type="button"
-                                disabled={index === orderedMembers.length - 1}
-                                onClick={() => moveMember(teamId, index, index + 1)}
-                                className="p-0.5 rounded text-neutral-400 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
-                                aria-label={`${member.user.name}を下に移動`}
-                              >
-                                ▼
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <input
-                        type="hidden"
-                        name={`memberOrder_${teamId}`}
-                        value={JSON.stringify(order)}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
             </div>
           )}
         </>
