@@ -17,7 +17,6 @@ type ScoreSheetViewProps = {
   editingThrowId?: string | null
 }
 
-const RANK_LABELS = ['1位', '2位', '3位', '4位', '5位', '6位', '7位', '8位']
 
 /**
  * スコアシート全体ビュー（紙のスコア表を模した2D表）
@@ -98,39 +97,6 @@ export function ScoreSheetView({
         </table>
       </div>
 
-      {/* 順位フッター */}
-      {data.rankings.length > 0 && (
-        <div className="flex items-center gap-3 px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-md flex-wrap">
-          <span className="text-xs text-neutral-500 font-medium shrink-0">最終順位:</span>
-          {data.rankings.map((r) => (
-            <div
-              key={r.teamId}
-              className="flex items-center gap-1.5 text-sm"
-              data-testid={`rank-${r.rank}`}
-            >
-              <span
-                className={[
-                  'inline-flex items-center justify-center w-12 h-7 rounded-full text-xs font-bold',
-                  r.rank === 1
-                    ? 'bg-warning-100 text-warning-700 border border-warning-400'
-                    : 'bg-neutral-200 text-neutral-700',
-                ].join(' ')}
-              >
-                {RANK_LABELS[r.rank - 1] ?? `${r.rank}位`}
-              </span>
-              <span
-                className={[
-                  r.isDisqualified ? 'line-through text-neutral-400' : 'text-neutral-900',
-                  'font-medium',
-                ].join(' ')}
-              >
-                {r.teamName}
-              </span>
-              <span className="text-neutral-500 tabular-nums">({r.totalScore})</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
