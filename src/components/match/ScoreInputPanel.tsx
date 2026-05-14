@@ -80,7 +80,7 @@ function ScoreInputPanelInner({
         : `${selected}本 → ${previewScore}点`
 
   return (
-    <div className="flex flex-col gap-2 flex-1 min-h-0" role="group" aria-label="スコア入力">
+    <div className="flex flex-col gap-2" role="group" aria-label="スコア入力">
       {/* モード切替 */}
       <div
         className="flex gap-1 p-1 bg-neutral-100 rounded-md"
@@ -125,7 +125,7 @@ function ScoreInputPanelInner({
 
 {/* 1〜12 パネル */}
       <div
-        className="grid grid-cols-3 grid-rows-4 flex-1 min-h-0"
+        className="grid grid-cols-3 grid-rows-4 h-56"
         role="radiogroup"
         aria-label={mode === 'single' ? 'スキットル番号' : '倒した本数'}
       >
