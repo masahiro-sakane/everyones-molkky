@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMatchWithScores, deleteMatch } from '@/services/matchService'
 import { db } from '@/lib/db'
+import { z, ZodError } from 'zod'
+
+const patchSchema = z.object({
+  startedAt: z.coerce.date().optional(),
+}).strict()
 
 type Params = { params: Promise<{ shareCode: string }> }
 
@@ -25,15 +30,18 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (!match) {
       return NextResponse.json({ success: false, error: '試合が見つかりません' }, { status: 404 })
     }
-    const body = await request.json()
+    const body = patchSchema.parse(await request.json())
     const updated = await db.match.update({
       where: { id: match.id },
       data: {
-        ...(body.startedAt !== undefined ? { startedAt: new Date(body.startedAt) } : {}),
+        ...(body.startedAt !== undefined ? { startedAt: body.startedAt } : {}),
       },
     })
     return NextResponse.json({ success: true, data: updated })
   } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({ success: false, error: error.issues }, { status: 400 })
+    }
     console.error('PATCH /api/matches/[shareCode] error:', error)
     return NextResponse.json({ success: false, error: '試合の更新に失敗しました' }, { status: 500 })
   }
