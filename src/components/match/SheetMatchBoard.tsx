@@ -8,7 +8,6 @@ import { useRealtimeScore } from '@/hooks/useRealtimeScore'
 import { useOptimisticMatch, type PendingThrow } from '@/hooks/useOptimisticMatch'
 import { ScoreSheetView } from './ScoreSheetView'
 import { ThrowRecorder } from './ThrowRecorder'
-import { CurrentThrower } from './CurrentThrower'
 import { ShareButton } from './ShareButton'
 import { ConnectionStatus } from './ConnectionStatus'
 import { MatchLimitStatus } from './MatchLimitStatus'
@@ -108,18 +107,6 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
         remainingRounds={matchState.remainingRounds}
         currentRound={matchState.currentRound}
       />
-
-      {/* 投擲者バー（全幅） */}
-      {currentThrower && (
-        <CurrentThrower
-          teamName={match.matchType === 'SOLO' ? '' : currentThrower.teamName}
-          throwerName={currentThrower.userName}
-          teamOrder={currentThrower.teamOrder}
-          totalTeams={currentThrower.totalTeams}
-          nextTeamName={match.matchType === 'SOLO' ? undefined : nextThrower?.teamName}
-          nextThrowerName={nextThrower?.userName}
-        />
-      )}
 
       {/* スコアシート + 入力パネル
           - lg以上: 横並び（シート左・入力右 viewport固定）

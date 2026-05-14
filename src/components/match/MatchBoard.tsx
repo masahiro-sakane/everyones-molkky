@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { useRealtimeScore } from '@/hooks/useRealtimeScore'
 import { LiveScoreBoard } from './LiveScoreBoard'
-import { CurrentThrower } from './CurrentThrower'
 import { ThrowRecorder } from './ThrowRecorder'
 import { ThrowHistory } from './ThrowHistory'
 import { MatchResult } from './MatchResult'
@@ -134,20 +133,6 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
           info={setTransitionInfo}
           watchMode={watchMode}
         />
-      )}
-
-      {/* 現在の投擲者 */}
-      {currentThrower && (
-        <div ref={throwerRef}>
-          <CurrentThrower
-            teamName={match.matchType === 'SOLO' ? '' : currentThrower.teamName}
-            throwerName={currentThrower.userName}
-            teamOrder={currentThrower.teamOrder}
-            totalTeams={currentThrower.totalTeams}
-            nextTeamName={match.matchType === 'SOLO' ? undefined : nextThrower?.teamName}
-            nextThrowerName={nextThrower?.userName}
-          />
-        </div>
       )}
 
       {/* 制限ルール状況 */}
