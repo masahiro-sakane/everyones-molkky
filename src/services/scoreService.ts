@@ -159,16 +159,19 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     const finalWinnerId = winnerId ?? limitWinnerId
 
     if (finalWinnerId) {
+      // 更新前に既にFINISHEDのセット数を取得（更新後のカウントは反映タイミングが不安定）
+      const alreadyFinishedCount = await tx.set.count({
+        where: { matchId: match.id, status: 'FINISHED' },
+      })
+
       // セットを終了
       await tx.set.update({
         where: { id: currentSet.id },
         data: { status: 'FINISHED', winnerId: finalWinnerId },
       })
 
-      // 完了セット数をDBから取得（match.setsはIN_PROGRESSのみのため直接使えない）
-      const finishedSetsCount = await tx.set.count({
-        where: { matchId: match.id, status: 'FINISHED' },
-      })
+      // 今終了したセットを含めた完了セット数
+      const finishedSetsCount = alreadyFinishedCount + 1
 
       if (finishedSetsCount >= match.totalSets) {
         await tx.match.update({

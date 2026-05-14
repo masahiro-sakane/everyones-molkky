@@ -274,18 +274,20 @@ export function useMatch(match: MatchData) {
     return topTeams.length === 1 ? topTeams[0][0] : (currentSet?.winnerId ?? null)
   }, [match.status, match.sets, currentSet])
 
-  // セット間遷移状態: 直近セットがFINISHEDで試合がまだ続いている
+  // セット間遷移状態: 直近セットがFINISHEDで次のセットが残っている場合のみ表示
   const setTransitionInfo = useMemo(() => {
     const lastSet = match.sets.at(-1)
     if (match.status !== 'IN_PROGRESS') return null
     if (!lastSet || lastSet.status !== 'FINISHED') return null
     const finishedSets = match.sets.filter((s) => s.status === 'FINISHED').length
+    const remainingSets = match.totalSets - finishedSets
+    if (remainingSets <= 0) return null
     return {
       completedSetNumber: lastSet.setNumber,
       totalSets: match.totalSets,
       winnerId: lastSet.winnerId,
       winnerName: match.matchTeams.find((mt) => mt.teamId === lastSet.winnerId)?.team.name ?? null,
-      remainingSets: match.totalSets - finishedSets,
+      remainingSets,
     }
   }, [match.status, match.sets, match.totalSets, match.matchTeams])
 
