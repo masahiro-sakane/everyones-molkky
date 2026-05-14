@@ -81,7 +81,7 @@ function ScoreInputPanelInner({
         : `${selected}本 → ${previewScore}点`
 
   return (
-    <div className="flex flex-col gap-4" role="group" aria-label="スコア入力">
+    <div className="flex flex-col gap-2 flex-1 min-h-0" role="group" aria-label="スコア入力">
       {/* モード切替 */}
       <div
         className="flex gap-1 p-1 bg-neutral-100 rounded-md"
@@ -96,7 +96,7 @@ function ScoreInputPanelInner({
           disabled={disabled || isLoading}
           data-testid="mode-multi"
           className={[
-            'flex-1 py-2 text-sm font-medium rounded transition-colors',
+            'flex-1 py-1.5 text-sm font-medium rounded transition-colors',
             mode === 'multi'
               ? 'bg-neutral-0 text-neutral-900 shadow-sm'
               : 'text-neutral-500 hover:text-neutral-700',
@@ -113,7 +113,7 @@ function ScoreInputPanelInner({
           disabled={disabled || isLoading}
           data-testid="mode-single"
           className={[
-            'flex-1 py-2 text-sm font-medium rounded transition-colors',
+            'flex-1 py-1.5 text-sm font-medium rounded transition-colors',
             mode === 'single'
               ? 'bg-neutral-0 text-neutral-900 shadow-sm'
               : 'text-neutral-500 hover:text-neutral-700',
@@ -126,7 +126,7 @@ function ScoreInputPanelInner({
 
 {/* 1〜12 パネル */}
       <div
-        className="grid grid-cols-3 gap-2"
+        className="grid grid-cols-3 grid-rows-4 gap-2 flex-1 min-h-0"
         role="radiogroup"
         aria-label={mode === 'single' ? 'スキットル番号' : '倒した本数'}
       >
@@ -142,7 +142,7 @@ function ScoreInputPanelInner({
               disabled={disabled || isLoading}
               data-testid={`score-${n}`}
               className={[
-                'aspect-square rounded-md border-2 text-lg font-bold transition-all',
+                'rounded-md border-2 text-lg font-bold transition-all w-full h-full',
                 'flex items-center justify-center',
                 'focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:outline-offset-2',
                 'disabled:opacity-40 disabled:cursor-not-allowed',
@@ -161,7 +161,7 @@ function ScoreInputPanelInner({
       <div className="flex gap-2">
         <Button
           variant="danger"
-          size="lg"
+          size="md"
           className="flex-1"
           onClick={handleMiss}
           disabled={disabled || isLoading}
@@ -172,7 +172,7 @@ function ScoreInputPanelInner({
         </Button>
         <Button
           variant="primary"
-          size="lg"
+          size="md"
           className="flex-1"
           onClick={handleConfirm}
           disabled={disabled || isLoading || selected === null}

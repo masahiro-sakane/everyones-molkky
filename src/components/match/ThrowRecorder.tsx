@@ -85,7 +85,7 @@ export function ThrowRecorder({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3 flex-1 min-h-0">
       {/* 2連続ミス警告 */}
       {consecutiveMisses >= 2 && (
         <div
@@ -132,7 +132,7 @@ export function ThrowRecorder({
       </div>
 
       {mode === 'score' ? (
-        <div>
+        <div className="flex flex-col flex-1 min-h-0">
           <ScoreInputPanel
             isFirstThrow={isFirstThrow}
             onConfirm={handleScoreConfirm}

@@ -118,7 +118,7 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
             aria-label="投擲記録"
             className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1"
           >
-            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-4 overflow-y-auto max-h-[calc(100svh-6rem)] lg:max-h-[calc(100svh-5rem)]">
+            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col h-[calc(100svh-6rem)] lg:h-[calc(100svh-5rem)] overflow-hidden">
               <ThrowRecorder
                 shareCode={match.shareCode}
                 currentTeamId={currentThrower.teamId}
