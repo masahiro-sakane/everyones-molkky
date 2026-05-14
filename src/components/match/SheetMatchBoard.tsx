@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { useScoreSheet } from '@/hooks/useScoreSheet'
 import { useRealtimeScore, type RealtimeScoreEvent } from '@/hooks/useRealtimeScore'
+import { toMatchData } from '@/lib/matchDataMapper'
 import { useOptimisticMatch, type PendingThrow } from '@/hooks/useOptimisticMatch'
 import { ScoreSheetView } from './ScoreSheetView'
 import { ThrowRecorder } from './ThrowRecorder'
@@ -62,7 +63,7 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
       if (res.ok) {
         const json = await res.json()
         if (json.data) {
-          syncFromServer(json.data as MatchData)
+          syncFromServer(toMatchData(json.data))
           // 試合終了・セット終了時はRSCも更新
           if (event.type === 'matchFinished') {
             router.refresh()
@@ -103,7 +104,7 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
           const json = await res.json()
           // POSTレスポンスに最新MatchDataが含まれていればそれで同期（router.refresh()不要）
           if (json.match) {
-            syncFromServer(json.match as MatchData)
+            syncFromServer(toMatchData(json.match))
           } else {
             router.refresh()
           }
