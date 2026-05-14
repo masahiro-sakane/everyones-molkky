@@ -46,7 +46,6 @@ function ScoreInputPanelInner({
   const changeMode = (next: InputMode) => {
     if (disabled || isLoading) return
     setMode(next)
-    setSelected(null)
   }
 
   const handleSelect = (n: number) => {
