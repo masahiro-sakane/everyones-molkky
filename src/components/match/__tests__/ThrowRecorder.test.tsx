@@ -66,4 +66,20 @@ describe('ThrowRecorder', () => {
     expect(screen.getByTestId('mode-score')).toBeDisabled()
     expect(screen.getByTestId('mode-fault')).toBeDisabled()
   })
+
+  it('consecutiveMisses=2のとき連続ミス警告バナーが表示される', () => {
+    render(<ThrowRecorder {...defaultProps} consecutiveMisses={2} />)
+    const alerts = screen.getAllByRole('alert')
+    expect(alerts.some((el) => el.textContent?.includes('連続ミス 2/3'))).toBe(true)
+  })
+
+  it('consecutiveMisses=1のとき警告バナーは表示されない', () => {
+    render(<ThrowRecorder {...defaultProps} consecutiveMisses={1} />)
+    expect(screen.queryByText(/連続ミス/)).not.toBeInTheDocument()
+  })
+
+  it('consecutiveMissesを渡さない（デフォルト0）とき警告バナーは表示されない', () => {
+    render(<ThrowRecorder {...defaultProps} />)
+    expect(screen.queryByText(/連続ミス/)).not.toBeInTheDocument()
+  })
 })

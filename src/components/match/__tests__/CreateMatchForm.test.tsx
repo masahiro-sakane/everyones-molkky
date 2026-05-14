@@ -126,6 +126,67 @@ describe('CreateMatchForm', () => {
     expect(screen.getByText('20')).toBeInTheDocument()
   })
 
+  it('チームを選択するとメンバー選択UIが表示される', async () => {
+    render(<CreateMatchForm teams={mockTeams} users={mockUsers} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /チームA/ }))
+    expect(screen.getByText('チームA — 参加メンバーと投擲順')).toBeInTheDocument()
+  })
+
+  // メンバー選択ボタンのみを取得するヘルパー（aria-pressed属性を持つもの）
+  const findMemberToggle = (name: string): HTMLButtonElement => {
+    const buttons = screen.getAllByRole('button')
+    const found = buttons.filter(
+      (b) =>
+        b.hasAttribute('aria-pressed') &&
+        b.textContent?.includes(name) &&
+        !b.getAttribute('aria-label')?.includes('移動')
+    )
+    // 「メンバー選択」セクションのボタンに限定するため、最初の該当ボタンを返す
+    // チーム選択ボタン（チームA等）も aria-pressed を持つので名前で除外
+    const memberBtns = found.filter((b) => !b.textContent?.match(/^チーム[A-Z]/))
+    return memberBtns[0] as HTMLButtonElement
+  }
+
+  it('チームAを選択すると所属メンバーがデフォルトで選択済みになる', async () => {
+    render(<CreateMatchForm teams={mockTeams} users={mockUsers} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /チームA/ }))
+    const tanakaBtn = findMemberToggle('田中')
+    const satoBtn = findMemberToggle('佐藤')
+    expect(tanakaBtn).toHaveAttribute('aria-pressed', 'true')
+    expect(satoBtn).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('メンバーボタンをクリックすると選択が解除される', async () => {
+    render(<CreateMatchForm teams={mockTeams} users={mockUsers} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /チームA/ }))
+    const tanakaBtn = findMemberToggle('田中')
+    expect(tanakaBtn).toHaveAttribute('aria-pressed', 'true')
+    await user.click(tanakaBtn)
+    expect(tanakaBtn).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('選択メンバーが0人になると警告が表示される', async () => {
+    render(<CreateMatchForm teams={mockTeams} users={mockUsers} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /チームA/ }))
+    await user.click(findMemberToggle('田中'))
+    await user.click(findMemberToggle('佐藤'))
+    expect(screen.getByText('1人以上選択してください')).toBeInTheDocument()
+  })
+
+  it('2チーム選択しメンバー1人除外しても試合開始ボタンは有効', async () => {
+    render(<CreateMatchForm teams={mockTeams} users={mockUsers} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /チームA/ }))
+    await user.click(screen.getByRole('button', { name: /チームB/ }))
+    // チームAの田中（最初のセクション）を選択解除（佐藤は残る）
+    await user.click(findMemberToggle('田中'))
+    expect(screen.getByRole('button', { name: /試合を開始/ })).not.toBeDisabled()
+  })
+
   it('ターン数の増減ボタンが機能する', async () => {
     render(<CreateMatchForm teams={mockTeams} users={mockUsers} />)
     const user = userEvent.setup()

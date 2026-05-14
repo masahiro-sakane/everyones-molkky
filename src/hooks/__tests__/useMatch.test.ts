@@ -219,6 +219,82 @@ describe('useMatch', () => {
     expect(result.current.remainingRounds).toBe(10)
   })
 
+  it('memberOrderに含まれないチームメンバーは投擲者から除外される', () => {
+    const match: MatchData = {
+      ...baseMatch,
+      matchTeams: [
+        {
+          teamId: 'team-a',
+          order: 1,
+          memberOrder: ['user-1', 'user-2'], // user-3を除外
+          team: {
+            id: 'team-a',
+            name: 'チームA',
+            isSolo: false,
+            members: [
+              { userId: 'user-1', role: 'captain', user: { id: 'user-1', name: '田中 太郎' } },
+              { userId: 'user-2', role: 'member', user: { id: 'user-2', name: '佐藤 花子' } },
+              { userId: 'user-3', role: 'member', user: { id: 'user-3', name: '鈴木 一郎' } },
+            ],
+          },
+        },
+        baseMatch.matchTeams[1],
+      ],
+      sets: [
+        {
+          id: 'set-1',
+          setNumber: 1,
+          status: 'IN_PROGRESS',
+          winnerId: null,
+          turns: [
+            { id: 'turn-1', turnNumber: 1, throws: [] }, // 空ターン → チームAの最初の投擲者
+          ],
+        },
+      ],
+    }
+    const { result } = renderHook(() => useMatch(match))
+    expect(result.current.currentThrower?.teamId).toBe('team-a')
+    expect(['user-1', 'user-2']).toContain(result.current.currentThrower?.userId)
+    expect(result.current.currentThrower?.userId).not.toBe('user-3')
+  })
+
+  it('memberOrderの順序通りに投擲者が決まる（逆順指定）', () => {
+    const match: MatchData = {
+      ...baseMatch,
+      matchTeams: [
+        {
+          teamId: 'team-a',
+          order: 1,
+          memberOrder: ['user-2', 'user-1'], // 逆順
+          team: {
+            id: 'team-a',
+            name: 'チームA',
+            isSolo: false,
+            members: [
+              { userId: 'user-1', role: 'captain', user: { id: 'user-1', name: '田中 太郎' } },
+              { userId: 'user-2', role: 'member', user: { id: 'user-2', name: '佐藤 花子' } },
+            ],
+          },
+        },
+        baseMatch.matchTeams[1],
+      ],
+      sets: [
+        {
+          id: 'set-1',
+          setNumber: 1,
+          status: 'IN_PROGRESS',
+          winnerId: null,
+          turns: [
+            { id: 'turn-1', turnNumber: 1, throws: [] },
+          ],
+        },
+      ],
+    }
+    const { result } = renderHook(() => useMatch(match))
+    expect(result.current.currentThrower?.teamId).toBe('team-a')
+    expect(result.current.currentThrower?.userId).toBe('user-2')
+  })
+
   it('limitType=TIMEのときremainingRoundsはnull', () => {
     const match = {
       ...baseMatch,
