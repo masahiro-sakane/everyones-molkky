@@ -253,6 +253,13 @@ export async function startNextSet(shareCode: string) {
     const teamCount = match.matchTeams.length
 
     // チーム投擲順を逆順に更新（order 1→N, 2→N-1, ...）
+    // 一時的に負の値にしてからセットすることで unique 制約違反を回避
+    for (const mt of match.matchTeams) {
+      await tx.matchTeam.update({
+        where: { id: mt.id },
+        data: { order: -(mt.order) },
+      })
+    }
     for (const mt of match.matchTeams) {
       const newOrder = teamCount + 1 - mt.order
       const newMemberOrder = [...mt.memberOrder].reverse()
