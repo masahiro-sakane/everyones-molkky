@@ -35,6 +35,8 @@ export const createMatchSchema = z.object({
   limitType: z.enum(['NONE', 'TURNS', 'TIME']).optional(),
   turnLimit: z.number().int().min(1).max(100).optional(),
   timeLimitMinutes: z.number().int().min(1).max(180).optional(),
+  // ゲーム数（1セット = 1ゲーム）
+  totalSets: z.number().int().min(1).max(10).optional().default(1),
 })
 
 // 試合作成（個人戦）
@@ -48,6 +50,8 @@ export const createSoloMatchSchema = z.object({
   limitType: z.enum(['NONE', 'TURNS', 'TIME']).optional(),
   turnLimit: z.number().int().min(1).max(100).optional(),
   timeLimitMinutes: z.number().int().min(1).max(180).optional(),
+  // ゲーム数
+  totalSets: z.number().int().min(1).max(10).optional().default(1),
 })
 
 // 有効なスキットル番号（1〜12）または複数本モードのセンチネル（0）

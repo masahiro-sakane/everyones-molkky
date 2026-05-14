@@ -159,14 +159,23 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     const finalWinnerId = winnerId ?? limitWinnerId
 
     if (finalWinnerId) {
+      // セットを終了
       await tx.set.update({
         where: { id: currentSet.id },
         data: { status: 'FINISHED', winnerId: finalWinnerId },
       })
-      await tx.match.update({
-        where: { id: match.id },
-        data: { status: 'FINISHED' },
-      })
+
+      // 全セット数を確認し、全ゲーム完了時のみ match を FINISHED にする
+      const allSets = await tx.set.findMany({ where: { matchId: match.id } })
+      const finishedSetsCount = allSets.filter((s) => s.status === 'FINISHED').length + 1 // +1: 今終了したセット
+
+      if (finishedSetsCount >= match.totalSets) {
+        await tx.match.update({
+          where: { id: match.id },
+          data: { status: 'FINISHED' },
+        })
+      }
+      // totalSets > finishedSetsCount の場合は match は IN_PROGRESS のまま（次のゲームを待つ）
     } else {
       // 試合継続：失格チームをスキップして次のターンを作成
       const teamCount = match.matchTeams.length
