@@ -20,7 +20,7 @@ function calcCombinations(remaining: number): [number, number][] {
   }
   // 今回の得点が大きい順
   results.sort((x, y) => y[0] - x[0])
-  return results.slice(0, 3)
+  return results
 }
 
 export function WinHintButton({ currentTotal }: WinHintButtonProps) {
