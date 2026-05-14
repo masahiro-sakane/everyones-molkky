@@ -8,6 +8,7 @@ type WinHintButtonProps = {
 
 const WINNING_SCORE = 50
 const HINT_THRESHOLD = 20
+const HINT_MIN = 13
 
 function calcCombinations(remaining: number): [number, number][] {
   const results: [number, number][] = []
@@ -38,7 +39,7 @@ export function WinHintButton({ currentTotal }: WinHintButtonProps) {
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
-  if (remaining > HINT_THRESHOLD || remaining <= 0) return null
+  if (remaining > HINT_THRESHOLD || remaining < HINT_MIN) return null
 
   const combos = calcCombinations(remaining)
   if (combos.length === 0) return null
