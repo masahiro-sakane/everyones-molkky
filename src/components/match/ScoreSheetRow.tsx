@@ -113,6 +113,7 @@ function TeamRowSection({
             isEditing={isEditing}
             isTeamDisqualified={column.isDisqualified}
             onClick={handleClick}
+            currentTotal={isCurrent ? (cumulative?.total ?? 0) : undefined}
           />
         )
       })}

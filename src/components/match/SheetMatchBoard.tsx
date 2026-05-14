@@ -16,7 +16,6 @@ import { WinnerBanner } from './WinnerBanner'
 import { ScoreCellEditPopover, type EditTarget } from './ScoreCellEditPopover'
 import { SetTransitionBanner } from './SetTransitionBanner'
 import { DiscardMatchButton } from './DiscardMatchButton'
-import { WinHintButton } from './WinHintButton'
 
 type SheetMatchBoardProps = {
   match: MatchData
@@ -164,23 +163,16 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
               remainingRounds={matchState.remainingRounds}
               currentRound={matchState.currentRound}
             />
-            <div className="flex gap-2 flex-1 min-h-0">
-              <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
-                <ThrowRecorder
-                  shareCode={match.shareCode}
-                  currentTeamId={currentThrower.teamId}
-                  currentUserId={currentThrower.userId}
-                  isFirstThrow={sheet.isFirstThrow}
-                  consecutiveMisses={matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)?.consecutiveMisses ?? 0}
-                  onOptimisticThrow={handleOptimisticThrow}
-                  isPending={isPending}
-                />
-              </div>
-              <div className="flex items-center">
-                <WinHintButton
-                  currentTotal={matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)?.totalScore ?? 0}
-                />
-              </div>
+            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
+              <ThrowRecorder
+                shareCode={match.shareCode}
+                currentTeamId={currentThrower.teamId}
+                currentUserId={currentThrower.userId}
+                isFirstThrow={sheet.isFirstThrow}
+                consecutiveMisses={matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)?.consecutiveMisses ?? 0}
+                onOptimisticThrow={handleOptimisticThrow}
+                isPending={isPending}
+              />
             </div>
           </aside>
         )}

@@ -56,7 +56,7 @@ export function WinHintButton({ currentTotal }: WinHintButtonProps) {
       </button>
 
       {open && (
-        <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 bg-neutral-0 border border-neutral-300 rounded-lg shadow-lg p-2 w-max">
+        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 bg-neutral-0 border border-neutral-300 rounded-lg shadow-lg p-2 w-max">
           <p className="text-[10px] text-neutral-500 mb-1.5 whitespace-nowrap">残り{remaining}点 — 2投勝利</p>
           <div className="flex flex-col gap-1">
             {combos.map(([a, b]) => (

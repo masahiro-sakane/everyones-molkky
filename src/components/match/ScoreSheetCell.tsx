@@ -1,6 +1,7 @@
 'use client'
 
 import type { ScoreSheetCell as Cell } from '@/types/scoreSheet'
+import { WinHintButton } from './WinHintButton'
 
 type ScoreSheetCellProps = {
   cell: Cell
@@ -12,6 +13,8 @@ type ScoreSheetCellProps = {
   onClick?: (rect: DOMRect) => void
   /** 列の失格状態 */
   isTeamDisqualified?: boolean
+  /** isCurrent のときのチーム累計（ヒントボタン用） */
+  currentTotal?: number
 }
 
 /**
@@ -33,6 +36,7 @@ export function ScoreSheetCell({
   isEditing = false,
   onClick,
   isTeamDisqualified = false,
+  currentTotal,
 }: ScoreSheetCellProps) {
   const baseClass = [
     'relative h-9 min-w-[2.5rem] border-r border-neutral-200',
@@ -74,6 +78,11 @@ export function ScoreSheetCell({
       title={isEditable ? '得点を修正する' : undefined}
     >
       <CellContent value={cell.value} />
+      {isCurrent && currentTotal !== undefined && (
+        <span className="absolute -right-3 top-1/2 -translate-y-1/2 z-20">
+          <WinHintButton currentTotal={currentTotal} />
+        </span>
+      )}
     </td>
   )
 }
