@@ -44,11 +44,11 @@ export function WinHintButton({ currentTotal }: WinHintButtonProps) {
   if (combos.length === 0) return null
 
   return (
-    <div ref={ref} className="relative inline-flex items-center">
+    <div ref={ref} className="relative flex items-center">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-4 h-4 rounded-full bg-warning-400 text-neutral-0 text-[10px] font-bold leading-none flex items-center justify-center hover:bg-warning-500 transition-colors"
+        className="w-6 h-6 rounded-full bg-warning-400 text-neutral-0 text-sm font-bold leading-none flex items-center justify-center hover:bg-warning-500 transition-colors"
         aria-label="2投勝利の組み合わせを表示"
         title="2投勝利ヒント"
       >
@@ -56,7 +56,7 @@ export function WinHintButton({ currentTotal }: WinHintButtonProps) {
       </button>
 
       {open && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 bg-neutral-0 border border-neutral-300 rounded-lg shadow-lg p-2 w-max">
+        <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 bg-neutral-0 border border-neutral-300 rounded-lg shadow-lg p-2 w-max">
           <p className="text-[10px] text-neutral-500 mb-1.5 whitespace-nowrap">残り{remaining}点 — 2投勝利</p>
           <div className="flex flex-col gap-1">
             {combos.map(([a, b]) => (
