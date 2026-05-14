@@ -19,6 +19,7 @@ const baseMatch: MatchData = {
   limitType: 'NONE',
   turnLimit: null,
   timeLimitMinutes: null,
+  totalSets: 1,
   startedAt: null,
   matchTeams: [
     {
