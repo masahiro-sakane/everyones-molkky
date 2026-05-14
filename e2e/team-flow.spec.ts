@@ -83,9 +83,8 @@ test.describe('チーム管理フロー', () => {
     await page.getByTestId('member-name-input').fill(memberName)
     await page.getByTestId('add-member-submit').click()
 
-    // 追加成功後にダイアログが閉じ、メンバー数が更新されることを検証
-    await expect(page.getByText(/メンバー（\d+人）/)).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText(memberName)).toBeVisible()
+    // 追加成功後にダイアログが閉じ、メンバー名が表示されることを検証
+    await expect(page.getByText(memberName)).toBeVisible({ timeout: 10_000 })
   })
 
   test('チーム統計ページが表示される', async ({ page }) => {

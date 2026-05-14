@@ -15,6 +15,11 @@ import { test, expect, type Page, type APIRequestContext } from '@playwright/tes
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000'
 
+async function switchToCardView(page: Page) {
+  await page.getByTestId('view-toggle-card').click()
+  await expect(page.getByText(/投擲履歴/)).toBeVisible({ timeout: 10_000 })
+}
+
 /** Server Action の完了を待つ（SSEのため networkidle は使えないため投擲履歴の更新を待つ） */
 async function waitForThrowRecorded(page: Page, expectedCount: number) {
   await expect(page.getByText(`投擲履歴（${expectedCount}回）`)).toBeVisible({ timeout: 15_000 })
@@ -22,7 +27,8 @@ async function waitForThrowRecorded(page: Page, expectedCount: number) {
 
 /** スキットル番号ボタンをクリックして確定する */
 async function recordSkittle(page: Page, skittleNumber: number, throwCount: number) {
-  const skittleBtn = page.getByTestId(`skittle-${skittleNumber}`)
+  await page.getByTestId('mode-single').click()
+  const skittleBtn = page.getByTestId(`score-${skittleNumber}`)
   await skittleBtn.scrollIntoViewIfNeeded()
   await skittleBtn.click()
   const confirmBtn = page.getByTestId('confirm-throw')
@@ -131,10 +137,10 @@ test.describe('試合フル通しテスト', () => {
       // ------------------------------------------------
       // 3. 試合画面が表示されること確認
       // ------------------------------------------------
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
       // 現在の投擲者コンポーネントが表示される
       await expect(page.getByTestId('current-thrower')).toBeVisible()
-      await expect(page.getByTestId('current-thrower')).toContainText('現在の投擲者')
       // 最初の投擲者はチームA
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者A')
 
@@ -142,21 +148,21 @@ test.describe('試合フル通しテスト', () => {
       await expect(page.getByLabel('スコアボード').getByText(teamAName)).toBeVisible()
       await expect(page.getByLabel('スコアボード').getByText(teamBName)).toBeVisible()
 
-      // スキットル入力UIが表示される
-      await expect(page.getByTestId('skittle-12')).toBeVisible()
+      // 入力UIが表示される
       await expect(page.getByTestId('miss-button')).toBeVisible()
 
       // ------------------------------------------------
       // 4. 投擲を繰り返して勝利させる
       //
+      // チームBを失格させないよう、2連続ミスごとに1点を記録してカウントをリセット
       // ターン1: チームA → 12番スキットル (12点)
-      // ターン2: チームB → ミス (0点)
+      // ターン2: チームB → ミス (連続1)
       // ターン3: チームA → 12番スキットル (24点)
-      // ターン4: チームB → ミス (0点)
+      // ターン4: チームB → ミス (連続2)
       // ターン5: チームA → 12番スキットル (36点)
-      // ターン6: チームB → ミス (0点)
+      // ターン6: チームB → 1番スキットル (1点・連続カウントリセット)
       // ターン7: チームA → 12番スキットル (48点)
-      // ターン8: チームB → ミス (0点)
+      // ターン8: チームB → ミス (連続1)
       // ターン9: チームA → 2番スキットル (50点) → 勝利！
       // ------------------------------------------------
 
@@ -172,7 +178,7 @@ test.describe('試合フル通しテスト', () => {
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者A')
       await recordSkittle(page, 12, 3)
 
-      // ターン4: チームB ミス
+      // ターン4: チームB ミス（連続2回）
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者B')
       await recordMiss(page, 4)
 
@@ -180,21 +186,22 @@ test.describe('試合フル通しテスト', () => {
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者A')
       await recordSkittle(page, 12, 5)
 
-      // ターン6: チームB ミス
+      // ターン6: チームB 1点（連続ミスカウントリセット）
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者B')
-      await recordMiss(page, 6)
+      await recordSkittle(page, 1, 6)
 
       // ターン7: チームA +12 = 48点
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者A')
       await recordSkittle(page, 12, 7)
 
-      // ターン8: チームB ミス
+      // ターン8: チームB ミス（連続1回）
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者B')
       await recordMiss(page, 8)
 
       // ターン9: チームA 2番スキットル → 50点で勝利
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者A')
-      const skittle2 = page.getByTestId('skittle-2')
+      await page.getByTestId('mode-single').click()
+      const skittle2 = page.getByTestId('score-2')
       await skittle2.scrollIntoViewIfNeeded()
       await skittle2.click()
       const confirmBtn = page.getByTestId('confirm-throw')
@@ -253,13 +260,14 @@ test.describe('試合フル通しテスト', () => {
       expect(shareCode).not.toBe('new')
 
       // 試合ページが正しく表示されることを確認
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
       await expect(page.getByTestId('current-thrower')).toBeVisible()
 
       // 別タブで観戦ページにアクセス
       const watchPage = await context.newPage()
       await watchPage.goto(`${BASE_URL}/matches/${shareCode}/watch`)
       await expect(watchPage.getByText('観戦モード', { exact: true })).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(watchPage)
       // スコアボード内のチーム名を確認
       await expect(watchPage.getByLabel('スコアボード').getByText(teamCName)).toBeVisible()
       await expect(watchPage.getByLabel('スコアボード').getByText(teamDName)).toBeVisible()

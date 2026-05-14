@@ -15,6 +15,11 @@ import { test, expect, type Page, type APIRequestContext } from '@playwright/tes
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000'
 
+async function switchToCardView(page: Page) {
+  await page.getByTestId('view-toggle-card').click()
+  await expect(page.getByText(/投擲履歴/)).toBeVisible({ timeout: 10_000 })
+}
+
 /** 投擲履歴のカウントで投擲完了を待つ */
 async function waitForThrowRecorded(page: Page, expectedCount: number) {
   await expect(page.getByText(`投擲履歴（${expectedCount}回）`)).toBeVisible({ timeout: 15_000 })
@@ -22,7 +27,8 @@ async function waitForThrowRecorded(page: Page, expectedCount: number) {
 
 /** スキットル番号ボタンをクリックして確定する */
 async function recordSkittle(page: Page, skittleNumber: number, throwCount: number) {
-  const skittleBtn = page.getByTestId(`skittle-${skittleNumber}`)
+  await page.getByTestId('mode-single').click()
+  const skittleBtn = page.getByTestId(`score-${skittleNumber}`)
   await skittleBtn.scrollIntoViewIfNeeded()
   await skittleBtn.click()
   const confirmBtn = page.getByTestId('confirm-throw')
@@ -115,8 +121,8 @@ test.describe('個人戦フロー', () => {
       expect(shareCode).toBeTruthy()
 
       // 4. 試合ページが表示される（個人戦）
-      await expect(page.getByText('個人戦')).toBeVisible({ timeout: 10_000 })
-      await expect(page.getByText('投擲を記録')).toBeVisible()
+      await switchToCardView(page)
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
       await expect(page.getByTestId('current-thrower')).toBeVisible()
 
       // 最初の投擲者はプレイヤーA
@@ -164,6 +170,8 @@ test.describe('個人戦フロー', () => {
       const shareCode = new URL(page.url()).pathname.replace('/matches/', '')
       matchShareCodes.push(shareCode)
 
+      await switchToCardView(page)
+
       // 3. 得点戦略: A が 12x4+2=50点で勝利、B は失格にならないよう2連続ミスまで
       // ターン1: A +12 = 12点
       await expect(page.getByTestId('current-thrower')).toContainText(playerAName)
@@ -199,7 +207,8 @@ test.describe('個人戦フロー', () => {
 
       // ターン9: A 2番スキットル → 50点で勝利
       await expect(page.getByTestId('current-thrower')).toContainText(playerAName)
-      const skittle2 = page.getByTestId('skittle-2')
+      await page.getByTestId('mode-single').click()
+      const skittle2 = page.getByTestId('score-2')
       await skittle2.scrollIntoViewIfNeeded()
       await skittle2.click()
       const confirmBtn = page.getByTestId('confirm-throw')

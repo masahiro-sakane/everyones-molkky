@@ -20,6 +20,11 @@ import { test, expect, type Page, type APIRequestContext } from '@playwright/tes
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000'
 
+async function switchToCardView(page: Page) {
+  await page.getByTestId('view-toggle-card').click()
+  await expect(page.getByText(/投擲履歴/)).toBeVisible({ timeout: 10_000 })
+}
+
 /** Server Action の完了を待つ（SSEのため networkidle は使えない） */
 async function waitForThrowRecorded(page: Page, expectedCount: number) {
   await expect(page.getByText(`投擲履歴（${expectedCount}回）`)).toBeVisible({ timeout: 15_000 })
@@ -27,7 +32,8 @@ async function waitForThrowRecorded(page: Page, expectedCount: number) {
 
 /** スキットル番号ボタンをクリックして確定する */
 async function recordSkittle(page: Page, skittleNumber: number, throwCount: number) {
-  const skittleBtn = page.getByTestId(`skittle-${skittleNumber}`)
+  await page.getByTestId('mode-single').click()
+  const skittleBtn = page.getByTestId(`score-${skittleNumber}`)
   await skittleBtn.scrollIntoViewIfNeeded()
   await skittleBtn.click()
   const confirmBtn = page.getByTestId('confirm-throw')
@@ -130,7 +136,8 @@ test.describe('制限ルールテスト', () => {
       matchShareCodes.push(shareCode)
 
       // 3. 試合画面が表示されること確認
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
 
       // ターン制限状況が表示される
       await expect(page.getByLabel('ターン制限状況')).toBeVisible()
@@ -214,7 +221,8 @@ test.describe('制限ルールテスト', () => {
       const shareCode = matchPath.replace('/matches/', '')
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
 
       const limitStatus = page.getByLabel('ターン制限状況')
       await expect(limitStatus).toBeVisible()
@@ -292,7 +300,8 @@ test.describe('制限ルールテスト', () => {
       matchShareCodes.push(shareCode)
 
       // 3. 試合画面が表示されること確認
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
 
       // 時間制限状況が表示される
       await expect(page.getByLabel('時間制限状況')).toBeVisible()
@@ -316,7 +325,8 @@ test.describe('制限ルールテスト', () => {
 
       // ページをリロードして時間切れ表示を反映
       await page.reload()
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
 
       // 時間切れ表示の確認
       await expect(page.getByLabel('時間制限状況')).toBeVisible()
@@ -377,7 +387,8 @@ test.describe('制限ルールテスト', () => {
       const shareCode = matchPath.replace('/matches/', '')
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
+      await expect(page.getByLabel('投擲記録').getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
 
       // 時間制限ステータスが表示される
       const limitStatus = page.getByLabel('時間制限状況')
