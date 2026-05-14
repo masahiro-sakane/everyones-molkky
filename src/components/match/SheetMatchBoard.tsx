@@ -148,21 +148,23 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
           - lg以上: 横並び（シート左・入力右 viewport固定）
           - lg未満: 入力パネルを上（画面内に収まる固定高さ）、シートを下 */}
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_360px] gap-4 lg:items-start">
-        {/* 入力パネル（観戦モード以外） */}
-        {!watchMode && currentThrower && (
-          <aside
-            aria-label="投擲記録"
-            className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1 flex flex-col gap-2 h-[calc(100svh-6rem)] lg:h-[calc(100svh-5rem)]"
-          >
-            {/* 制限ルール状況（入力パネル内で高さを占有） */}
-            <MatchLimitStatus
-              limitType={match.limitType}
-              turnLimit={match.turnLimit}
-              timeLimitMinutes={match.timeLimitMinutes}
-              startedAt={match.startedAt}
-              remainingRounds={matchState.remainingRounds}
-              currentRound={matchState.currentRound}
-            />
+        {/* 右カラム: 入力パネル or 観戦表示 + 順位・アクション行 */}
+        <aside
+          aria-label="入力・情報パネル"
+          className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1 flex flex-col gap-2 h-[calc(100svh-6rem)] lg:h-[calc(100svh-5rem)]"
+        >
+          {/* 制限ルール状況 */}
+          <MatchLimitStatus
+            limitType={match.limitType}
+            turnLimit={match.turnLimit}
+            timeLimitMinutes={match.timeLimitMinutes}
+            startedAt={match.startedAt}
+            remainingRounds={matchState.remainingRounds}
+            currentRound={matchState.currentRound}
+          />
+
+          {/* 得点入力 */}
+          {!watchMode && currentThrower && (
             <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
               <ThrowRecorder
                 shareCode={match.shareCode}
@@ -174,18 +176,53 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
                 isPending={isPending}
               />
             </div>
-          </aside>
-        )}
+          )}
 
-        {watchMode && (
-          <aside className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1">
+          {/* 観戦モード */}
+          {watchMode && (
             <div className="text-center py-3 bg-neutral-50 border border-neutral-200 rounded-lg">
               <p className="text-xs text-neutral-500">
                 観戦モード — スコアはリアルタイムで更新されます
               </p>
             </div>
-          </aside>
-        )}
+          )}
+
+          {/* 最終順位・アクション */}
+          {sheet.rankings.length > 0 && (
+            <div className="flex flex-col gap-1.5 px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-md">
+              <span className="text-xs text-neutral-500 font-medium">最終順位</span>
+              {sheet.rankings.map((r) => (
+                <div key={r.teamId} className="flex items-center gap-2 text-sm" data-testid={`rank-${r.rank}`}>
+                  <span className={[
+                    'inline-flex items-center justify-center w-10 h-6 rounded-full text-xs font-bold shrink-0',
+                    r.rank === 1 ? 'bg-warning-100 text-warning-700 border border-warning-400' : 'bg-neutral-200 text-neutral-700',
+                  ].join(' ')}>
+                    {r.rank}位
+                  </span>
+                  <span className={[r.isDisqualified ? 'line-through text-neutral-400' : 'text-neutral-900', 'font-medium'].join(' ')}>
+                    {r.teamName}
+                  </span>
+                  <span className="text-neutral-500 tabular-nums ml-auto">({r.totalScore})</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-2 pt-1 border-t border-neutral-200">
+                {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
+                <div className="ml-auto flex items-center gap-2">
+                  <ShareButton shareCode={match.shareCode} />
+                  <ConnectionStatus status={connStatus} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 試合中のアクション（順位表示前） */}
+          {sheet.rankings.length === 0 && (
+            <div className="flex items-center justify-end gap-2">
+              <ShareButton shareCode={match.shareCode} />
+              <ConnectionStatus status={connStatus} />
+            </div>
+          )}
+        </aside>
 
         {/* スコアシート */}
         <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2 lg:order-1 order-2">
@@ -193,13 +230,6 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             data={sheet}
             onEditCell={!watchMode && !isFinished ? (throwId, skittles, rect) => setEditTarget({ throwId, currentSkittles: skittles, anchorRect: rect }) : undefined}
             editingThrowId={editTarget?.throwId}
-            rankingActions={
-              <>
-                {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
-                <ShareButton shareCode={match.shareCode} />
-                <ConnectionStatus status={connStatus} />
-              </>
-            }
           />
           {editTarget && (
             <ScoreCellEditPopover
