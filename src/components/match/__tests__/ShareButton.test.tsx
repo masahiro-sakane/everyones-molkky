@@ -14,38 +14,23 @@ describe('ShareButton', () => {
     })
   })
 
-  it('共有URLの入力フィールドを表示する', () => {
+  it('共有ボタンを表示する', () => {
     render(<ShareButton shareCode="ABC123" />)
-    const input = screen.getByRole('textbox', { name: '試合共有URL' })
-    expect(input).toBeInTheDocument()
-    expect(input).toHaveAttribute('readonly')
+    expect(screen.getByRole('button', { name: '観戦URLをコピー' })).toBeInTheDocument()
   })
 
-  it('コピーボタンを表示する', () => {
-    render(<ShareButton shareCode="ABC123" />)
-    expect(screen.getByRole('button', { name: 'URLをコピー' })).toBeInTheDocument()
-  })
-
-  it('URLに shareCode が含まれる', () => {
-    render(<ShareButton shareCode="TESTCODE" />)
-    const input = screen.getByRole('textbox', { name: '試合共有URL' })
-    const value = input.getAttribute('value') ?? ''
-    expect(value).toContain('TESTCODE')
-  })
-
-  it('コピーボタンをクリックできる（clipboard API は環境依存）', async () => {
+  it('コピーボタンをクリックできる', async () => {
     const user = userEvent.setup()
     render(<ShareButton shareCode="ABC123" />)
-    // クリックしてもエラーにならない
     await expect(
-      user.click(screen.getByRole('button', { name: 'URLをコピー' }))
+      user.click(screen.getByRole('button', { name: '観戦URLをコピー' }))
     ).resolves.not.toThrow()
   })
 
   it('コピー後はボタンラベルが変わる', async () => {
     const user = userEvent.setup()
     render(<ShareButton shareCode="ABC123" />)
-    await user.click(screen.getByRole('button', { name: 'URLをコピー' }))
+    await user.click(screen.getByRole('button', { name: '観戦URLをコピー' }))
     expect(screen.getByRole('button', { name: 'コピー済み' })).toBeInTheDocument()
   })
 })

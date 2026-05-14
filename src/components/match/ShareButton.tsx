@@ -46,23 +46,13 @@ export function ShareButton({ shareCode }: ShareButtonProps) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <input
-        type="text"
-        readOnly
-        value={shareUrl}
-        className="flex-1 h-8 px-3 text-xs bg-neutral-50 border border-neutral-300 rounded-md text-neutral-600 truncate"
-        aria-label="試合共有URL"
-        onClick={(e) => (e.target as HTMLInputElement).select()}
-      />
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={handleCopy}
-        aria-label={copied ? 'コピー済み' : 'URLをコピー'}
-      >
-        {copied ? '✓ コピー済み' : 'コピー'}
-      </Button>
-    </div>
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={handleCopy}
+      aria-label={copied ? 'コピー済み' : '観戦URLをコピー'}
+    >
+      {copied ? '✓ コピー済み' : '共有'}
+    </Button>
   )
 }

@@ -295,7 +295,7 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
                 })}
               </ol>
 
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {selectedTeamIds.map((teamId) => {
                   const team = teams.find((t) => t.id === teamId)
                   if (!team || team.members.length <= 1) return null
@@ -306,13 +306,13 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
                     .filter(Boolean) as TeamMember[]
 
                   return (
-                    <div key={teamId}>
-                      <p className="text-xs text-neutral-500 mb-1">{team.name} の投擲順</p>
+                    <div key={teamId} className="bg-neutral-0 border border-neutral-200 rounded-md p-3">
+                      <p className="text-xs font-medium text-neutral-600 mb-2">{team.name} の投擲順</p>
                       <div className="flex flex-col gap-1">
                         {orderedMembers.map((member, index) => (
                           <div
                             key={member.userId}
-                            className="flex items-center gap-2 bg-neutral-0 border border-neutral-200 rounded px-3 py-1.5"
+                            className="flex items-center gap-2 border border-neutral-100 rounded px-2 py-1.5"
                           >
                             <span className="text-xs text-neutral-400 w-4 shrink-0">{index + 1}</span>
                             <span className="text-sm text-neutral-700 flex-1">{member.user.name}</span>

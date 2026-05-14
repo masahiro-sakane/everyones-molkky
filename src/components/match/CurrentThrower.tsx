@@ -17,31 +17,27 @@ export function CurrentThrower({
 }: CurrentThrowerProps) {
   return (
     <div
-      className="bg-brand-50 border border-brand-200 rounded-lg px-4 py-3 flex items-center justify-between gap-4"
+      className="bg-brand-50 border border-brand-200 rounded-lg px-3 py-1.5 flex items-center justify-between gap-3"
       data-testid="current-thrower"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 min-w-0">
         <div
-          className="w-10 h-10 rounded-full bg-brand-500 text-neutral-0 flex items-center justify-center text-base font-bold shrink-0"
+          className="w-7 h-7 rounded-full bg-brand-500 text-neutral-0 flex items-center justify-center text-sm font-bold shrink-0"
           aria-hidden="true"
         >
           {throwerName.charAt(0)}
         </div>
-        <div>
-          <p className="text-xs text-brand-600 font-medium">現在の投擲者</p>
-          <p className="text-sm font-bold text-neutral-900">{throwerName}</p>
-          <p className="text-xs text-neutral-500">{teamName}</p>
-        </div>
+        <span className="text-xs text-brand-600 font-medium shrink-0">投擲者:</span>
+        <span className="text-sm font-bold text-neutral-900 truncate">{throwerName}</span>
+        {teamName && <span className="text-xs text-neutral-500 truncate">({teamName})</span>}
       </div>
-      <div className="text-right">
-        <p className="text-xs text-neutral-400">
-          チーム {teamOrder} / {totalTeams}
-        </p>
-        {nextTeamName && nextThrowerName && (
-          <p className="text-xs text-neutral-400 mt-1">
+      <div className="flex items-center gap-3 shrink-0 text-xs text-neutral-400">
+        <span>チーム {teamOrder} / {totalTeams}</span>
+        {nextThrowerName && (
+          <span>
             次: <span className="text-neutral-600">{nextThrowerName}</span>
-            <span className="ml-1 text-neutral-400">({nextTeamName})</span>
-          </p>
+            {nextTeamName && <span className="ml-0.5">({nextTeamName})</span>}
+          </span>
         )}
       </div>
     </div>

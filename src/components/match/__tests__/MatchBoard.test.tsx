@@ -76,10 +76,9 @@ describe('MatchBoard', () => {
     expect(screen.getByText('投擲履歴（0回）')).toBeInTheDocument()
   })
 
-  it('共有URLを表示する', () => {
+  it('共有ボタンを表示する', () => {
     render(<MatchBoard match={baseMatch} />)
-    const input = screen.getByRole('textbox', { name: '試合共有URL' })
-    expect(input.getAttribute('value')).toContain('SHARE01')
+    expect(screen.getByRole('button', { name: '観戦URLをコピー' })).toBeInTheDocument()
   })
 
   it('観戦モードでは投擲入力が表示されない', () => {
