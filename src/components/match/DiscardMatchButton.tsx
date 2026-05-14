@@ -36,11 +36,10 @@ export function DiscardMatchButton({ shareCode }: DiscardMatchButtonProps) {
   return (
     <>
       <Button
-        variant="subtle"
+        variant="danger"
         size="sm"
         onClick={() => setIsOpen(true)}
         data-testid="discard-match-button"
-        className="text-danger-600 hover:bg-danger-50"
       >
         記録を破棄
       </Button>

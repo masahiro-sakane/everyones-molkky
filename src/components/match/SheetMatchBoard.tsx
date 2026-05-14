@@ -15,11 +15,14 @@ import { MatchLimitStatus } from './MatchLimitStatus'
 import { WinnerBanner } from './WinnerBanner'
 import { ScoreCellEditPopover, type EditTarget } from './ScoreCellEditPopover'
 import { SetTransitionBanner } from './SetTransitionBanner'
+import { DiscardMatchButton } from './DiscardMatchButton'
 
 type SheetMatchBoardProps = {
   match: MatchData
   /** 観戦モード（投擲入力を非表示） */
   watchMode?: boolean
+  /** 記録を破棄ボタンを表示するか */
+  canDiscard?: boolean
 }
 
 // 安定したclientIdを生成（タブごとに一意）
@@ -34,7 +37,7 @@ function getClientId(): string {
   return id
 }
 
-export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardProps) {
+export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }: SheetMatchBoardProps) {
   const router = useRouter()
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
   const clientIdRef = useRef<string>('')
@@ -203,6 +206,7 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
             />
           )}
           <div className="flex items-center justify-end gap-2 pt-1">
+            {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
             <ShareButton shareCode={match.shareCode} />
             <ConnectionStatus status={connStatus} />
           </div>

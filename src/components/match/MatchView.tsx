@@ -2,7 +2,6 @@
 
 import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { SheetMatchBoard } from './SheetMatchBoard'
-import { DiscardMatchButton } from './DiscardMatchButton'
 
 type MatchViewProps = {
   match: MatchData
@@ -15,13 +14,7 @@ export function MatchView({ match, watchMode = false }: MatchViewProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <SheetMatchBoard match={match} watchMode={watchMode} />
-
-      {canDiscard && (
-        <div className="pt-1">
-          <DiscardMatchButton shareCode={match.shareCode} />
-        </div>
-      )}
+      <SheetMatchBoard match={match} watchMode={watchMode} canDiscard={canDiscard} />
     </div>
   )
 }
