@@ -2,10 +2,11 @@
 
 import { useState, useSyncExternalStore } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import type { MatchData } from '@/hooks/useMatch'
+import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { MatchBoard } from './MatchBoard'
 import { SheetMatchBoard } from './SheetMatchBoard'
 import { ViewToggle, type ViewMode } from './ViewToggle'
+import { DiscardMatchButton } from './DiscardMatchButton'
 
 type MatchViewProps = {
   match: MatchData
@@ -40,7 +41,6 @@ export function MatchView({ match, watchMode = false }: MatchViewProps) {
     () => null // SSR フォールバック
   )
 
-  // ユーザが画面内で変更した値（localStorage より優先）
   const [override, setOverride] = useState<ViewMode | null>(null)
 
   const view: ViewMode = override ?? stored ?? (isTabletOrLarger ? 'sheet' : 'card')
@@ -52,6 +52,9 @@ export function MatchView({ match, watchMode = false }: MatchViewProps) {
     }
   }
 
+  const { isFinished } = useMatch(match)
+  const canDiscard = !watchMode && !isFinished
+
   return (
     <div className="flex flex-col gap-2">
       {view === 'sheet' ? (
@@ -60,8 +63,13 @@ export function MatchView({ match, watchMode = false }: MatchViewProps) {
         <MatchBoard match={match} watchMode={watchMode} />
       )}
 
-      {/* ビュー切替（下部） */}
-      <div className="flex justify-end pt-1">
+      {/* ビュー切替 + 破棄ボタン（下部） */}
+      <div className="flex items-center justify-between pt-1">
+        {canDiscard ? (
+          <DiscardMatchButton shareCode={match.shareCode} />
+        ) : (
+          <div />
+        )}
         <ViewToggle value={view} onChange={handleChange} />
       </div>
     </div>
