@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { createMatch, createSoloMatch } from '@/services/matchService'
 import { recordThrow } from '@/services/scoreService'
 import { createMatchSchema, createSoloMatchSchema, recordThrowSchema } from '@/lib/validation'
@@ -41,8 +42,12 @@ export async function createMatchAction(
       revalidatePath('/matches')
       redirect(`/matches/${match.shareCode}`)
     } catch (error) {
+      if (isRedirectError(error)) throw error
       if (error instanceof ZodError) {
         return { errors: error.flatten().fieldErrors as Record<string, string[]> }
+      }
+      if (error instanceof Error) {
+        return { message: error.message }
       }
       throw error
     }
@@ -87,8 +92,12 @@ export async function createMatchAction(
     revalidatePath('/matches')
     redirect(`/matches/${match.shareCode}`)
   } catch (error) {
+    if (isRedirectError(error)) throw error
     if (error instanceof ZodError) {
       return { errors: error.flatten().fieldErrors as Record<string, string[]> }
+    }
+    if (error instanceof Error) {
+      return { message: error.message }
     }
     throw error
   }
