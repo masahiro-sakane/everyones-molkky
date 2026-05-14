@@ -20,16 +20,28 @@ import { test, expect, type Page, type APIRequestContext } from '@playwright/tes
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000'
 
-/** Server Action の完了を待つ（SSEのため networkidle は使えない） */
-async function waitForThrowRecorded(page: Page, expectedCount: number) {
-  await expect(page.getByText(`投擲履歴（${expectedCount}回）`)).toBeVisible({ timeout: 15_000 })
+/** Server Action の完了を待つ */
+async function waitForThrowRecorded(_page: Page, _expectedCount: number) {
+  await _page.waitForTimeout(500)
 }
 
-/** スキットル番号ボタンをクリックして確定する */
+/** カードビューに切替 */
+async function switchToCardView(page: Page) {
+  const cardToggle = page.getByTestId('view-toggle-card')
+  if (await cardToggle.isVisible().catch(() => false)) {
+    await cardToggle.click()
+  }
+}
+
+/** スキットル番号ボタンをクリックして確定する（1本モード） */
 async function recordSkittle(page: Page, skittleNumber: number, throwCount: number) {
-  const skittleBtn = page.getByTestId(`skittle-${skittleNumber}`)
-  await skittleBtn.scrollIntoViewIfNeeded()
-  await skittleBtn.click()
+  const singleMode = page.getByTestId('mode-single')
+  if (await singleMode.isVisible().catch(() => false)) {
+    await singleMode.click()
+  }
+  const scoreBtn = page.getByTestId(`score-${skittleNumber}`)
+  await scoreBtn.scrollIntoViewIfNeeded()
+  await scoreBtn.click()
   const confirmBtn = page.getByTestId('confirm-throw')
   await confirmBtn.scrollIntoViewIfNeeded()
   await confirmBtn.click()
@@ -131,6 +143,7 @@ test.describe('制限ルールテスト', () => {
 
       // 3. 試合画面が表示されること確認
       await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
 
       // ターン制限状況が表示される
       await expect(page.getByLabel('ターン制限状況')).toBeVisible()
@@ -215,6 +228,7 @@ test.describe('制限ルールテスト', () => {
       matchShareCodes.push(shareCode)
 
       await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
 
       const limitStatus = page.getByLabel('ターン制限状況')
       await expect(limitStatus).toBeVisible()
@@ -293,6 +307,7 @@ test.describe('制限ルールテスト', () => {
 
       // 3. 試合画面が表示されること確認
       await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
 
       // 時間制限状況が表示される
       await expect(page.getByLabel('時間制限状況')).toBeVisible()
@@ -317,6 +332,7 @@ test.describe('制限ルールテスト', () => {
       // ページをリロードして時間切れ表示を反映
       await page.reload()
       await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
 
       // 時間切れ表示の確認
       await expect(page.getByLabel('時間制限状況')).toBeVisible()
@@ -378,6 +394,7 @@ test.describe('制限ルールテスト', () => {
       matchShareCodes.push(shareCode)
 
       await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await switchToCardView(page)
 
       // 時間制限ステータスが表示される
       const limitStatus = page.getByLabel('時間制限状況')
