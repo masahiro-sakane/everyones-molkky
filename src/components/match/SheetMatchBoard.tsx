@@ -187,41 +187,12 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             </div>
           )}
 
-          {/* 最終順位・アクション */}
-          {sheet.rankings.length > 0 && (
-            <div className="flex flex-col gap-1.5 px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-md">
-              <span className="text-xs text-neutral-500 font-medium">順位</span>
-              {sheet.rankings.map((r) => (
-                <div key={r.teamId} className="flex items-center gap-2 text-sm" data-testid={`rank-${r.rank}`}>
-                  <span className={[
-                    'inline-flex items-center justify-center w-10 h-6 rounded-full text-xs font-bold shrink-0',
-                    r.rank === 1 ? 'bg-warning-100 text-warning-700 border border-warning-400' : 'bg-neutral-200 text-neutral-700',
-                  ].join(' ')}>
-                    {r.rank}位
-                  </span>
-                  <span className={[r.isDisqualified ? 'line-through text-neutral-400' : 'text-neutral-900', 'font-medium'].join(' ')}>
-                    {r.teamName}
-                  </span>
-                  <span className="text-neutral-500 tabular-nums ml-auto">({r.totalScore})</span>
-                </div>
-              ))}
-              <div className="flex items-center gap-2 pt-1 border-t border-neutral-200">
-                {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
-                <div className="ml-auto flex items-center gap-2">
-                  <ShareButton shareCode={match.shareCode} />
-                  <ConnectionStatus status={connStatus} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 試合中のアクション（順位表示前） */}
-          {sheet.rankings.length === 0 && (
-            <div className="flex items-center justify-end gap-2">
-              <ShareButton shareCode={match.shareCode} />
-              <ConnectionStatus status={connStatus} />
-            </div>
-          )}
+          {/* アクション */}
+          <div className="flex items-center gap-2 justify-end">
+            {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
+            <ShareButton shareCode={match.shareCode} />
+            <ConnectionStatus status={connStatus} />
+          </div>
         </aside>
 
         {/* スコアシート */}
