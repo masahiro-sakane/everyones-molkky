@@ -35,6 +35,7 @@
 ## テスト
 - {Link: Vitest https://vitest.dev/} を使用して単体テストを記述。
 - 全コンポーネントはStorybookに登録する。
+- e2eテストでは完了時にテストで作成したデータを削除すること
 
 ## UI/UXデザイン
 デザインとフロントエンド開発のガイドラインとして以下のAtlassian Design Systemを使用して下さい。

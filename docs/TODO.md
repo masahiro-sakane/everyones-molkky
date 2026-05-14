@@ -123,3 +123,21 @@
 - [x] 9-6: Vercel 環境変数設定（DATABASE_URL, DIRECT_URL など）
 - [x] 9-7: Vercel デプロイ実行・動作確認 → https://everyones-molkky.vercel.app
 - [x] 9-8: README.md にデプロイ済みURLを追記
+
+## Phase 10: スコアシート風UIへの改修
+- [x] 10-1: 入力パネル刷新 — SkittleInput（12本配置図）を廃止し、1〜12 数字パネル + 「複数本/1本」モード切替の ScoreInputPanel を新設
+- [x] 10-2: 試合の最初の投擲時は「複数本」モード、以降は「1本」モードをデフォルトに
+- [x] 10-3: API互換維持のため skittlesKnocked にセンチネル 0 を導入（複数本モード時は [0, 0, ..., 0]）
+- [x] 10-4: scoring.calculateThrowScore を 0 センチネル対応に更新（テスト含む）
+- [x] 10-5: validation.recordThrowSchema を 0 許容に更新（テスト含む）
+- [x] 10-6: 型定義 src/types/scoreSheet.ts 新設（ScoreSheetData, ScoreSheetCell, TeamColumn, TeamRanking）
+- [x] 10-7: useScoreSheet フック実装（投擲履歴から2D表構造へ派生、累計/ゴール/25リセット/失格を計算）
+- [x] 10-8: useScoreSheet ユニットテスト（19件、列定義/セル値/累計/失格/現在投擲/順位/▶マーカー網羅）
+- [x] 10-9: ScoreSheetCell + ScoreSheetRow + ScoreSheetTeamHeader コンポーネント実装（紙のスコア表を模した2D table）
+- [x] 10-10: ScoreSheetView 統合コンポーネント実装（ヘッダー/本体/合計行/順位フッター）
+- [x] 10-11: Storybook 追加（ScoreInputPanel, ScoreSheetCell, ScoreSheetView の構成バリエーション）
+- [x] 10-12: SheetMatchBoard 実装（シート + 入力パネルを横並びレイアウト、観戦モード対応）
+- [x] 10-13: ViewToggle + useMediaQuery + MatchView ラッパー実装（PC/タブレット=シート、スマホ=カード、localStorage 永続化）
+- [x] 10-14: page.tsx (試合画面/観戦) を MatchView に切替、max-w を md以上で 7xl に拡張
+- [x] 10-15: E2Eテスト更新（旧 skittle-N test-id → score-N、シートビュー対応のため switchToCardView 補助関数追加）
+- [x] 10-16: 旧 SkittleInput 関連削除（コンポーネント + Story + テスト）
