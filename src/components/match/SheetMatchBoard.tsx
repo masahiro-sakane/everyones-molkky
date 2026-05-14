@@ -144,16 +144,6 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
         />
       )}
 
-      {/* 制限ルール状況 */}
-      <MatchLimitStatus
-        limitType={match.limitType}
-        turnLimit={match.turnLimit}
-        timeLimitMinutes={match.timeLimitMinutes}
-        startedAt={match.startedAt}
-        remainingRounds={matchState.remainingRounds}
-        currentRound={matchState.currentRound}
-      />
-
       {/* スコアシート + 入力パネル
           - lg以上: 横並び（シート左・入力右 viewport固定）
           - lg未満: 入力パネルを上（画面内に収まる固定高さ）、シートを下 */}
@@ -162,9 +152,18 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
         {!watchMode && currentThrower && (
           <aside
             aria-label="投擲記録"
-            className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1"
+            className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1 flex flex-col gap-2 h-[calc(100svh-6rem)] lg:h-[calc(100svh-5rem)]"
           >
-            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col h-[calc(100svh-6rem)] lg:h-[calc(100svh-5rem)] overflow-hidden">
+            {/* 制限ルール状況（入力パネル内で高さを占有） */}
+            <MatchLimitStatus
+              limitType={match.limitType}
+              turnLimit={match.turnLimit}
+              timeLimitMinutes={match.timeLimitMinutes}
+              startedAt={match.startedAt}
+              remainingRounds={matchState.remainingRounds}
+              currentRound={matchState.currentRound}
+            />
+            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
               <ThrowRecorder
                 shareCode={match.shareCode}
                 currentTeamId={currentThrower.teamId}
