@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { recordThrow } from '@/services/scoreService'
+import { getMatchWithScores } from '@/services/matchService'
 import { matchEmitter } from '@/lib/eventEmitter'
 import { ZodError } from 'zod'
 
@@ -9,9 +10,14 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
     const { shareCode } = await params
     const body = await request.json()
+    const clientId: string | undefined = body.clientId
+
     const result = await recordThrow(shareCode, body)
 
-    // SSE イベント発行
+    // 最新の試合データを取得してレスポンスに含める（router.refresh()不要に）
+    const freshMatch = await getMatchWithScores(shareCode)
+
+    // SSE イベント発行（clientId を含めて投擲者自身がスキップできるようにする）
     const eventType = result.result.isWinner ? 'matchFinished' : 'scoreUpdated'
     matchEmitter.emit({
       type: eventType,
@@ -25,10 +31,11 @@ export async function POST(request: NextRequest, { params }: Params) {
         isDisqualified: result.result.isDisqualified,
         isWinner: result.result.isWinner,
         timestamp: Date.now(),
+        ...(clientId ? { clientId } : {}),
       },
     })
 
-    return NextResponse.json({ success: true, data: result }, { status: 201 })
+    return NextResponse.json({ success: true, data: result, match: freshMatch }, { status: 201 })
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ success: false, error: error.issues }, { status: 400 })

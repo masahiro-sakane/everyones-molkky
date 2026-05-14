@@ -6,7 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  directUrl = env("DIRECT_URL")
 }
 
 // ユーザー
@@ -69,6 +70,8 @@ model Match {
   matchTeams MatchTeam[]
   sets       Set[]
 
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
   @@map("matches")
 }
 
@@ -118,6 +121,7 @@ model Set {
   teamSetScores  TeamSetScore[]
 
   @@unique([matchId, setNumber])
+  @@index([matchId, status])
   @@map("sets")
 }
 
@@ -156,6 +160,7 @@ model Throw {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([turnId, throwOrder])
+  @@index([teamId])
   @@map("throws")
 }
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { useScoreSheet } from '@/hooks/useScoreSheet'
-import { useRealtimeScore } from '@/hooks/useRealtimeScore'
+import { useRealtimeScore, type RealtimeScoreEvent } from '@/hooks/useRealtimeScore'
 import { useOptimisticMatch, type PendingThrow } from '@/hooks/useOptimisticMatch'
 import { ScoreSheetView } from './ScoreSheetView'
 import { ThrowRecorder } from './ThrowRecorder'
@@ -21,12 +21,28 @@ type SheetMatchBoardProps = {
   watchMode?: boolean
 }
 
+// 安定したclientIdを生成（タブごとに一意）
+function getClientId(): string {
+  if (typeof sessionStorage === 'undefined') return ''
+  const key = 'molkky-client-id'
+  let id = sessionStorage.getItem(key)
+  if (!id) {
+    id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    sessionStorage.setItem(key, id)
+  }
+  return id
+}
+
 export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardProps) {
   const router = useRouter()
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
-  const sheetContainerRef = useRef<HTMLDivElement>(null)
+  const clientIdRef = useRef<string>('')
   const { optimisticMatch, isPending, applyOptimistic, syncFromServer, rollback } =
     useOptimisticMatch(match)
+
+  useEffect(() => {
+    clientIdRef.current = getClientId()
+  }, [])
 
   // サーバーから最新データが来たら同期
   const matchRef = useRef(match)
@@ -38,12 +54,31 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
   const matchState = useMatch(optimisticMatch)
   const sheet = useScoreSheet(optimisticMatch)
 
-  const handleRealtimeEvent = useCallback(() => {
+  // SSEイベント: 他ユーザーの投擲を受信したらAPIから最新データを取得してローカル更新
+  // router.refresh()によるRSC全体再レンダリングを避けることで高速化
+  const handleRealtimeEvent = useCallback(async (event: RealtimeScoreEvent) => {
+    try {
+      const res = await fetch(`/api/matches/${match.shareCode}`, { cache: 'no-store' })
+      if (res.ok) {
+        const json = await res.json()
+        if (json.data) {
+          syncFromServer(json.data as MatchData)
+          // 試合終了・セット終了時はRSCも更新
+          if (event.type === 'matchFinished') {
+            router.refresh()
+          }
+          return
+        }
+      }
+    } catch {
+      // フォールバック: RSC再レンダリング
+    }
     router.refresh()
-  }, [router])
+  }, [router, match.shareCode, syncFromServer])
 
   const { status: connStatus } = useRealtimeScore({
     shareCode: match.shareCode,
+    clientId: clientIdRef.current,
     onEvent: handleRealtimeEvent,
   })
 
@@ -59,22 +94,28 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
             teamId: pending.teamId,
             skittlesKnocked: pending.skittlesKnocked,
             faultType: pending.faultType ?? undefined,
+            clientId: clientIdRef.current,
           }),
         })
         if (!res.ok) {
           rollback(matchRef.current)
         } else {
-          router.refresh()
+          const json = await res.json()
+          // POSTレスポンスに最新MatchDataが含まれていればそれで同期（router.refresh()不要）
+          if (json.match) {
+            syncFromServer(json.match as MatchData)
+          } else {
+            router.refresh()
+          }
         }
       } catch {
         rollback(matchRef.current)
       }
     },
-    [applyOptimistic, rollback, router, match.shareCode]
+    [applyOptimistic, rollback, syncFromServer, router, match.shareCode]
   )
 
   const currentThrower = matchState.currentThrower
-  const nextThrower = matchState.nextThrower
   const isFinished = matchState.isFinished && !!matchState.winnerTeamId
   const setTransitionInfo = matchState.setTransitionInfo
 
@@ -144,7 +185,7 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
 
         {/* スコアシート */}
         <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2 lg:order-1 order-2">
-          <div ref={sheetContainerRef}>
+          <div>
             <ScoreSheetView
               data={sheet}
               onEditCell={!watchMode && !isFinished ? (throwId, skittles, rect) => setEditTarget({ throwId, currentSkittles: skittles, anchorRect: rect }) : undefined}

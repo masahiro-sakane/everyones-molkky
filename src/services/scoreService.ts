@@ -9,7 +9,7 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
   const validated = recordThrowSchema.parse(input)
 
   return db.$transaction(async (tx) => {
-    // 試合を取得
+    // 試合・セット・ターン・全チームスコアを1クエリで取得（round-trip削減）
     const match = await tx.match.findUnique({
       where: { shareCode },
       include: {
@@ -26,7 +26,7 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
                 throws: { orderBy: { throwOrder: 'desc' }, take: 1 },
               },
             },
-            // ターン数カウント用に全ターン数を取得
+            teamSetScores: true,
             _count: { select: { turns: true } },
           },
         },
@@ -54,10 +54,10 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     const lastThrow = currentTurn.throws[0]
     const nextThrowOrder = lastThrow ? lastThrow.throwOrder + 1 : 1
 
-    // 現在のチームスコアを取得
-    const teamScore = await tx.teamSetScore.findUniqueOrThrow({
-      where: { setId_teamId: { setId: currentSet.id, teamId: validated.teamId } },
-    })
+    // 既にincludeした teamSetScores から現在チームのスコアを取得（追加クエリ不要）
+    const allTeamScores = currentSet.teamSetScores
+    const teamScore = allTeamScores.find((s) => s.teamId === validated.teamId)
+    if (!teamScore) throw new Error('チームスコアが見つかりません')
 
     // スコア計算
     const throwResult = processThrow({
@@ -69,38 +69,40 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
       },
     })
 
-    // 投擲を記録
-    const newThrow = await tx.throw.create({
-      data: {
-        turnId: currentTurn.id,
-        userId: validated.userId,
-        teamId: validated.teamId,
-        throwOrder: nextThrowOrder,
-        skittlesKnocked: validated.skittlesKnocked,
-        score: throwResult.score,
-        isFault: throwResult.isFault,
-        faultType: throwResult.faultType,
-      },
-      include: { user: true },
-    })
+    // 投擲記録とチームスコア更新を並列実行
+    const [newThrow] = await Promise.all([
+      tx.throw.create({
+        data: {
+          turnId: currentTurn.id,
+          userId: validated.userId,
+          teamId: validated.teamId,
+          throwOrder: nextThrowOrder,
+          skittlesKnocked: validated.skittlesKnocked,
+          score: throwResult.score,
+          isFault: throwResult.isFault,
+          faultType: throwResult.faultType,
+        },
+        include: { user: true },
+      }),
+      tx.teamSetScore.update({
+        where: { setId_teamId: { setId: currentSet.id, teamId: validated.teamId } },
+        data: {
+          totalScore: throwResult.totalScore,
+          consecutiveMisses: throwResult.consecutiveMisses,
+          isDisqualified: throwResult.isDisqualified,
+        },
+      }),
+    ])
 
-    // チームスコアを更新
-    await tx.teamSetScore.update({
-      where: { setId_teamId: { setId: currentSet.id, teamId: validated.teamId } },
-      data: {
-        totalScore: throwResult.totalScore,
-        consecutiveMisses: throwResult.consecutiveMisses,
-        isDisqualified: throwResult.isDisqualified,
-      },
-    })
-
-    // 全チームのスコアを取得（失格チーム判定用）
-    const allTeamScores = await tx.teamSetScore.findMany({
-      where: { setId: currentSet.id },
-    })
+    // 更新後のスコアを計算（メモリ内で）
+    const updatedTeamScores = allTeamScores.map((s) =>
+      s.teamId === validated.teamId
+        ? { ...s, totalScore: throwResult.totalScore, consecutiveMisses: throwResult.consecutiveMisses, isDisqualified: throwResult.isDisqualified }
+        : s
+    )
 
     // 失格していないチームの一覧
-    const activeTeams = allTeamScores.filter((s) => !s.isDisqualified)
+    const activeTeams = updatedTeamScores.filter((s) => !s.isDisqualified)
 
     // 勝利判定：50点到達、または失格していないチームが1つのみ残った場合
     const lastTeamStanding =
@@ -114,7 +116,6 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     // 制限超過チェック（通常勝利がない場合のみ）
     let limitWinnerId: string | null = null
     if (!winnerId) {
-      const teamCount = match.matchTeams.length
       const completedRounds = Math.floor(currentTurn.turnNumber / teamCount)
 
       // ターン制限チェック：1ラウンド（全チームが1回ずつ投擲）完了後に判定
@@ -125,13 +126,12 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
         currentTurn.turnNumber % teamCount === 0 &&
         completedRounds >= match.turnLimit
       ) {
-        const activeScores = allTeamScores.filter((s) => !s.isDisqualified)
+        const activeScores = updatedTeamScores.filter((s) => !s.isDisqualified)
         const maxScore = Math.max(...activeScores.map((s) => s.totalScore))
         const topTeams = activeScores.filter((s) => s.totalScore === maxScore)
         if (topTeams.length === 1) {
           limitWinnerId = topTeams[0].teamId
         }
-        // 同点の場合は継続（limitWinnerIdはnullのまま）
       }
 
       // 時間制限チェック
@@ -141,12 +141,12 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
         match.timeLimitMinutes !== undefined &&
         match.startedAt !== null &&
         match.startedAt !== undefined &&
-        currentTurn.turnNumber % teamCount === 0 // ラウンドの最後に判定
+        currentTurn.turnNumber % teamCount === 0
       ) {
         const elapsedMs = Date.now() - new Date(match.startedAt).getTime()
         const elapsedMinutes = elapsedMs / 1000 / 60
         if (elapsedMinutes >= match.timeLimitMinutes) {
-          const activeScores = allTeamScores.filter((s) => !s.isDisqualified)
+          const activeScores = updatedTeamScores.filter((s) => !s.isDisqualified)
           const maxScore = Math.max(...activeScores.map((s) => s.totalScore))
           const topTeams = activeScores.filter((s) => s.totalScore === maxScore)
           if (topTeams.length === 1) {
@@ -165,9 +165,8 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
         data: { status: 'FINISHED', winnerId: finalWinnerId },
       })
 
-      // 全セット数を確認し、全ゲーム完了時のみ match を FINISHED にする
-      const allSets = await tx.set.findMany({ where: { matchId: match.id } })
-      const finishedSetsCount = allSets.filter((s) => s.status === 'FINISHED').length
+      // _count で取得済みのターン数を使って全セット完了を判定（追加クエリを避ける）
+      const finishedSetsCount = match.sets.filter((s) => s.status === 'FINISHED').length + 1
 
       if (finishedSetsCount >= match.totalSets) {
         await tx.match.update({
@@ -175,17 +174,15 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
           data: { status: 'FINISHED' },
         })
       }
-      // totalSets > finishedSetsCount の場合は match は IN_PROGRESS のまま（次のゲームを待つ）
     } else {
       // 試合継続：失格チームをスキップして次のターンを作成
-      const teamCount = match.matchTeams.length
       let nextTurnNumber = currentTurn.turnNumber + 1
 
       // 失格チームをスキップ（最大でも全チーム数分だけループ）
       for (let i = 0; i < teamCount; i++) {
         const teamIndex = (nextTurnNumber - 1) % teamCount
         const nextMatchTeam = match.matchTeams.find((mt) => mt.order === teamIndex + 1)
-        const nextTeamScore = allTeamScores.find((s) => s.teamId === nextMatchTeam?.teamId)
+        const nextTeamScore = updatedTeamScores.find((s) => s.teamId === nextMatchTeam?.teamId)
         if (!nextTeamScore?.isDisqualified) break
         nextTurnNumber++
       }

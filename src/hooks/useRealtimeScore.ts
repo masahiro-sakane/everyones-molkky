@@ -13,6 +13,8 @@ export type RealtimeScoreEvent = {
 
 type UseRealtimeScoreOptions = {
   shareCode: string
+  /** 自己フィルタリング用クライアントID（自分の投擲によるSSEをスキップ） */
+  clientId?: string
   onEvent?: (event: RealtimeScoreEvent) => void
   /** SSE が使えない場合のポーリング間隔(ms)。0 で無効 */
   pollingIntervalMs?: number
@@ -26,6 +28,7 @@ function isSseSupported(): boolean {
 
 export function useRealtimeScore({
   shareCode,
+  clientId,
   onEvent,
   pollingIntervalMs = 5_000,
   maxReconnectDelayMs = 30_000,
@@ -39,6 +42,9 @@ export function useRealtimeScore({
   const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const onEventRef = useRef(onEvent)
   onEventRef.current = onEvent
+  // clientIdは接続URL構築時に参照するためrefで保持
+  const clientIdRef = useRef(clientId)
+  clientIdRef.current = clientId
 
   const clearReconnectTimer = () => {
     if (reconnectTimerRef.current) {
@@ -98,7 +104,11 @@ export function useRealtimeScore({
     closeEventSource()
     setStatus(reconnectAttemptsRef.current === 0 ? 'connecting' : 'reconnecting')
 
-    const url = `/api/matches/${shareCode}/stream`
+    // clientIdをクエリパラメータとして渡す（サーバー側で自己フィルタリング）
+    const cid = clientIdRef.current
+    const url = cid
+      ? `/api/matches/${shareCode}/stream?clientId=${encodeURIComponent(cid)}`
+      : `/api/matches/${shareCode}/stream`
     const es = new EventSource(url)
     esRef.current = es
 

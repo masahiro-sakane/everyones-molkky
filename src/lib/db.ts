@@ -11,10 +11,11 @@ function createPrismaClient() {
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set')
   }
-  // Vercelサーバーレス環境ではコネクション数を抑える
+  // Supabase Transaction Pooler (port 6543) 経由でコネクション効率化
+  // サーバーレス環境ではコネクション数を抑える
   const pool = new Pool({
     connectionString,
-    max: 1,
+    max: 2,
   })
   const adapter = new PrismaPg(pool)
   return new PrismaClient({ adapter })
