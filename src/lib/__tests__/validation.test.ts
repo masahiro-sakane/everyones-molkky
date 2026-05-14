@@ -83,22 +83,40 @@ describe('recordThrowSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('スキットル番号が0以下の場合はエラーになる', () => {
+  it('スキットル番号が負数の場合はエラーになる', () => {
     const result = recordThrowSchema.safeParse({
       userId: 'user1',
       teamId: 'team1',
-      skittlesKnocked: [0],
+      skittlesKnocked: [-1],
     })
     expect(result.success).toBe(false)
   })
 
-  it('重複したスキットル番号はエラーになる', () => {
+  it('0は複数本モードのセンチネルとして許容される', () => {
+    const result = recordThrowSchema.safeParse({
+      userId: 'user1',
+      teamId: 'team1',
+      skittlesKnocked: [0, 0, 0],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('重複したスキットル番号（1〜12）はエラーになる', () => {
     const result = recordThrowSchema.safeParse({
       userId: 'user1',
       teamId: 'team1',
       skittlesKnocked: [5, 5],
     })
     expect(result.success).toBe(false)
+  })
+
+  it('複数本モードの 0 は重複許容される', () => {
+    const result = recordThrowSchema.safeParse({
+      userId: 'user1',
+      teamId: 'team1',
+      skittlesKnocked: [0, 0, 0, 0],
+    })
+    expect(result.success).toBe(true)
   })
 
   it('有効なfaultTypeが通過する', () => {

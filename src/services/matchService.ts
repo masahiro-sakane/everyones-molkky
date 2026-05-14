@@ -160,7 +160,9 @@ export async function getMatchByShareCode(shareCode: string) {
     where: { shareCode },
     include: {
       matchTeams: {
-        include: { team: true },
+        include: {
+          team: { include: { members: { include: { user: true }, orderBy: { joinedAt: 'asc' } } } },
+        },
         orderBy: { order: 'asc' },
       },
       sets: {
@@ -230,7 +232,7 @@ export async function getMatchWithScores(shareCode: string) {
     where: { shareCode },
     include: {
       matchTeams: {
-        include: { team: { include: { members: { include: { user: true } } } } },
+        include: { team: { include: { members: { include: { user: true }, orderBy: { joinedAt: 'asc' } } } } },
         orderBy: { order: 'asc' },
       },
       sets: {

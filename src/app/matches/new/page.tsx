@@ -11,7 +11,7 @@ export default async function NewMatchPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg md:max-w-4xl mx-auto">
         <div className="mb-6">
           <Link
             href="/"

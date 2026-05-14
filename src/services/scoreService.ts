@@ -42,6 +42,14 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     const currentTurn = currentSet.turns[0]
     if (!currentTurn) throw new Error('進行中のターンがありません')
 
+    // turnNumber からこのターンの担当チームを検証する
+    const teamCount = match.matchTeams.length
+    const expectedTeamIndex = (currentTurn.turnNumber - 1) % teamCount
+    const expectedMatchTeam = match.matchTeams.find((mt) => mt.order === expectedTeamIndex + 1)
+    if (!expectedMatchTeam || expectedMatchTeam.teamId !== validated.teamId) {
+      throw new Error('投擲順序が正しくありません')
+    }
+
     // 現在のターンにある最後の投擲順を取得
     const lastThrow = currentTurn.throws[0]
     const nextThrowOrder = lastThrow ? lastThrow.throwOrder + 1 : 1

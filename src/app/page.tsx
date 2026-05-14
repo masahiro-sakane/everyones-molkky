@@ -33,10 +33,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div className={`grid grid-cols-1 ${activeMatches.length > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 max-w-4xl mx-auto`}>
         {/* 進行中の試合 */}
         {activeMatches.length > 0 && (
-          <section className="md:col-span-2 bg-brand-50 border border-brand-200 rounded-lg p-4">
+          <section className="bg-brand-50 border border-brand-200 rounded-lg p-4">
             <h2 className="text-sm font-semibold text-brand-700 mb-3">進行中の試合</h2>
             <div className="flex flex-col gap-2">
               {activeMatches.map((match) => (
@@ -118,7 +118,7 @@ export default async function HomePage() {
         </section>
 
         {/* クイックリンク */}
-        <section className="md:col-span-2 bg-neutral-0 border border-neutral-300 rounded-lg p-4">
+        <section className="md:col-span-full bg-neutral-0 border border-neutral-300 rounded-lg p-4">
           <h2 className="text-sm font-semibold text-neutral-700 mb-3">統計・分析</h2>
           <div className="flex flex-wrap gap-2">
             <Link href="/stats/teams">

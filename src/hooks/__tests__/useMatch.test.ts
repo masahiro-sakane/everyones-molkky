@@ -64,6 +64,12 @@ const baseMatch: MatchData = {
             },
           ],
         },
+        // DBフロー: 投擲後に次の空ターンが作成される
+        {
+          id: 'turn-2',
+          turnNumber: 2,
+          throws: [],
+        },
       ],
     },
   ],
@@ -82,10 +88,10 @@ describe('useMatch', () => {
     expect(teamA?.teamName).toBe('チームA')
   })
 
-  it('現在の投擲者を返す（ターン1 → チームA）', () => {
+  it('現在の投擲者を返す（ターン2の空ターン → チームB）', () => {
     const { result } = renderHook(() => useMatch(baseMatch))
-    expect(result.current.currentThrower?.teamId).toBe('team-a')
-    expect(result.current.currentThrower?.userName).toBe('田中 太郎')
+    expect(result.current.currentThrower?.teamId).toBe('team-b')
+    expect(result.current.currentThrower?.userName).toBe('佐藤 花子')
   })
 
   it('投擲履歴を返す', () => {
@@ -136,26 +142,40 @@ describe('useMatch', () => {
     expect(result.current.winnerTeamId).toBe('team-a')
   })
 
-  it('ターン2ではチームBが投擲者', () => {
+  it('チームBが投擲済み → 次はターン3でチームAが投擲者', () => {
     const match = {
       ...baseMatch,
       sets: [
         {
           ...baseMatch.sets[0],
           turns: [
-            ...baseMatch.sets[0].turns,
+            baseMatch.sets[0].turns[0], // turn-1: チームA投擲済み
             {
               id: 'turn-2',
               turnNumber: 2,
-              throws: [],
+              throws: [
+                {
+                  id: 'throw-2',
+                  teamId: 'team-b',
+                  userId: 'user-2',
+                  throwOrder: 1,
+                  skittlesKnocked: [3],
+                  score: 3,
+                  isFault: false,
+                  faultType: null,
+                  createdAt: new Date().toISOString(),
+                  user: { id: 'user-2', name: '佐藤 花子' },
+                },
+              ],
             },
+            { id: 'turn-3', turnNumber: 3, throws: [] }, // 次の空ターン
           ],
         },
       ],
     }
     const { result } = renderHook(() => useMatch(match))
-    expect(result.current.currentThrower?.teamId).toBe('team-b')
-    expect(result.current.currentThrower?.teamOrder).toBe(2)
+    expect(result.current.currentThrower?.teamId).toBe('team-a')
+    expect(result.current.currentThrower?.teamOrder).toBe(1)
   })
 
   it('limitType=NONEのときremainingRoundsはnull', () => {
@@ -163,16 +183,16 @@ describe('useMatch', () => {
     expect(result.current.remainingRounds).toBeNull()
   })
 
-  it('limitType=TURNSのとき残りラウンド数を返す（ターン1・2チーム・制限12）', () => {
+  it('limitType=TURNSのとき残りラウンド数を返す（ターン2が空・2チーム・制限12）', () => {
     const match = {
       ...baseMatch,
       limitType: 'TURNS' as const,
       turnLimit: 12,
     }
     const { result } = renderHook(() => useMatch(match))
-    // ターン1でチームAが投擲中 → completedRounds = floor(1/2) = 0
-    expect(result.current.currentRound).toBe(0)
-    expect(result.current.remainingRounds).toBe(12)
+    // baseMatchはターン1(A投擲済み)+ターン2(空) → latestTurnNumber=2 → completedRounds = floor(2/2) = 1
+    expect(result.current.currentRound).toBe(1)
+    expect(result.current.remainingRounds).toBe(11)
   })
 
   it('limitType=TURNSで2ラウンド完了（ターン4）のとき残り10ラウンド', () => {
