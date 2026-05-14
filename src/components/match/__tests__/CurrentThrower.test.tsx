@@ -13,10 +13,10 @@ describe('CurrentThrower', () => {
       />
     )
     expect(screen.getByText('田中 太郎')).toBeInTheDocument()
-    expect(screen.getByText('チームA')).toBeInTheDocument()
+    expect(screen.getByText('(チームA)')).toBeInTheDocument()
   })
 
-  it('現在の投擲者ラベルが表示される', () => {
+  it('投擲者ラベルが表示される', () => {
     render(
       <CurrentThrower
         teamName="チームA"
@@ -25,7 +25,7 @@ describe('CurrentThrower', () => {
         totalTeams={2}
       />
     )
-    expect(screen.getByText('現在の投擲者')).toBeInTheDocument()
+    expect(screen.getByText('投擲者:')).toBeInTheDocument()
   })
 
   it('チーム番号が表示される', () => {

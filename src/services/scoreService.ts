@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
-import { recordThrowSchema } from '@/lib/validation'
-import { processThrow } from '@/lib/scoring'
+import { recordThrowSchema, updateThrowSchema } from '@/lib/validation'
+import { processThrow, calculateThrowScore } from '@/lib/scoring'
 import type { z } from 'zod'
 
 export type RecordThrowInput = z.infer<typeof recordThrowSchema>
@@ -41,6 +41,14 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
 
     const currentTurn = currentSet.turns[0]
     if (!currentTurn) throw new Error('進行中のターンがありません')
+
+    // turnNumber からこのターンの担当チームを検証する
+    const teamCount = match.matchTeams.length
+    const expectedTeamIndex = (currentTurn.turnNumber - 1) % teamCount
+    const expectedMatchTeam = match.matchTeams.find((mt) => mt.order === expectedTeamIndex + 1)
+    if (!expectedMatchTeam || expectedMatchTeam.teamId !== validated.teamId) {
+      throw new Error('投擲順序が正しくありません')
+    }
 
     // 現在のターンにある最後の投擲順を取得
     const lastThrow = currentTurn.throws[0]
@@ -151,14 +159,23 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     const finalWinnerId = winnerId ?? limitWinnerId
 
     if (finalWinnerId) {
+      // セットを終了
       await tx.set.update({
         where: { id: currentSet.id },
         data: { status: 'FINISHED', winnerId: finalWinnerId },
       })
-      await tx.match.update({
-        where: { id: match.id },
-        data: { status: 'FINISHED' },
-      })
+
+      // 全セット数を確認し、全ゲーム完了時のみ match を FINISHED にする
+      const allSets = await tx.set.findMany({ where: { matchId: match.id } })
+      const finishedSetsCount = allSets.filter((s) => s.status === 'FINISHED').length + 1 // +1: 今終了したセット
+
+      if (finishedSetsCount >= match.totalSets) {
+        await tx.match.update({
+          where: { id: match.id },
+          data: { status: 'FINISHED' },
+        })
+      }
+      // totalSets > finishedSetsCount の場合は match は IN_PROGRESS のまま（次のゲームを待つ）
     } else {
       // 試合継続：失格チームをスキップして次のターンを作成
       const teamCount = match.matchTeams.length
@@ -182,6 +199,75 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
       throw: newThrow,
       result: throwResult,
     }
+  })
+}
+
+export type UpdateThrowInput = z.infer<typeof updateThrowSchema>
+
+/**
+ * 投擲記録を修正し、そのチームの teamSetScore を全投擲から再計算して更新する。
+ * 再計算は「そのセット内のそのチームの全投擲を時系列順にシミュレート」して行う。
+ */
+export async function updateThrow(shareCode: string, throwId: string, input: UpdateThrowInput) {
+  const validated = updateThrowSchema.parse(input)
+
+  return db.$transaction(async (tx) => {
+    const match = await tx.match.findUnique({
+      where: { shareCode },
+      include: { sets: { where: { status: 'IN_PROGRESS' }, take: 1 } },
+    })
+    if (!match) throw new Error('試合が見つかりません')
+    if (match.status !== 'IN_PROGRESS') throw new Error('試合は進行中ではありません')
+
+    const currentSet = match.sets[0]
+    if (!currentSet) throw new Error('進行中のセットがありません')
+
+    // 対象の投擲を取得
+    const targetThrow = await tx.throw.findUnique({ where: { id: throwId } })
+    if (!targetThrow) throw new Error('投擲が見つかりません')
+
+    const newScore = calculateThrowScore(validated.skittlesKnocked)
+
+    // 投擲レコードを更新
+    await tx.throw.update({
+      where: { id: throwId },
+      data: {
+        skittlesKnocked: validated.skittlesKnocked,
+        score: newScore,
+        isFault: false,
+        faultType: null,
+      },
+    })
+
+    // そのチームの全投擲を時系列順に再取得してスコアを再計算
+    const allThrows = await tx.throw.findMany({
+      where: { turn: { setId: currentSet.id }, teamId: targetThrow.teamId },
+      orderBy: [{ turn: { turnNumber: 'asc' } }, { throwOrder: 'asc' }],
+    })
+
+    let totalScore = 0
+    let consecutiveMisses = 0
+    let isDisqualified = false
+
+    for (const t of allThrows) {
+      const result = processThrow({
+        currentScore: totalScore,
+        consecutiveMisses,
+        throwInput: {
+          skittlesKnocked: t.skittlesKnocked,
+          faultType: t.faultType as Parameters<typeof processThrow>[0]['throwInput']['faultType'],
+        },
+      })
+      totalScore = result.totalScore
+      consecutiveMisses = result.consecutiveMisses
+      isDisqualified = result.isDisqualified
+      if (result.isWinner) break
+    }
+
+    await tx.teamSetScore.update({
+      where: { setId_teamId: { setId: currentSet.id, teamId: targetThrow.teamId } },
+      data: { totalScore, consecutiveMisses, isDisqualified },
+    })
   })
 }
 

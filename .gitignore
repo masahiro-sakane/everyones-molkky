@@ -41,8 +41,15 @@ Thumbs.db
 # Storybook
 storybook-static/
 
-# Claude Code local settings
-.claude/settings.local.json
+# Claude Code
+.claude/
+.playwright-mcp/
+
+# Debug artifacts
+*.png
+*.jpg
+!public/**/*.png
+!public/**/*.jpg
 
 # TypeScript build info
 tsconfig.tsbuildinfo

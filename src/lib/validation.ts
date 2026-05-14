@@ -35,6 +35,8 @@ export const createMatchSchema = z.object({
   limitType: z.enum(['NONE', 'TURNS', 'TIME']).optional(),
   turnLimit: z.number().int().min(1).max(100).optional(),
   timeLimitMinutes: z.number().int().min(1).max(180).optional(),
+  // ゲーム数（1セット = 1ゲーム）
+  totalSets: z.number().int().min(1).max(10).optional().default(1),
 })
 
 // 試合作成（個人戦）
@@ -48,23 +50,43 @@ export const createSoloMatchSchema = z.object({
   limitType: z.enum(['NONE', 'TURNS', 'TIME']).optional(),
   turnLimit: z.number().int().min(1).max(100).optional(),
   timeLimitMinutes: z.number().int().min(1).max(180).optional(),
+  // ゲーム数
+  totalSets: z.number().int().min(1).max(10).optional().default(1),
 })
 
-// 有効なスキットル番号（1〜12）
-const skittleNumberSchema = z.number().int().min(1).max(12)
+// 有効なスキットル番号（1〜12）または複数本モードのセンチネル（0）
+const skittleNumberSchema = z.number().int().min(0).max(12)
 
 // 投擲記録
+// skittlesKnocked の規約:
+//   - 空配列: ミス（0点）
+//   - 長さ1かつ要素が1〜12: そのスキットル1本のみ倒した（1本モード入力）
+//   - 長さ2以上で要素が1〜12: 複数本倒した（番号特定あり、得点=本数）
+//   - 0 を含む配列: 複数本モード入力（番号特定なし、得点=本数）
+//     例: 3本倒しは [0, 0, 0]
 export const recordThrowSchema = z.object({
   userId: z.string().min(1, 'ユーザーIDは必須です'),
   teamId: z.string().min(1, 'チームIDは必須です'),
   skittlesKnocked: z
     .array(skittleNumberSchema)
     .max(12, '倒せるスキットルは12本以下です')
-    .refine(
-      (arr) => new Set(arr).size === arr.length,
-      '同じスキットル番号を重複して指定することはできません'
-    ),
+    .refine((arr) => {
+      // 0 を含まない場合のみ番号の重複を禁止
+      if (arr.includes(0)) return true
+      return new Set(arr).size === arr.length
+    }, '同じスキットル番号を重複して指定することはできません'),
   faultType: z.enum(['MISS', 'DROP', 'STEP_OVER', 'WRONG_ORDER']).nullable().optional(),
+})
+
+// 投擲修正（得点のみ変更可能）
+export const updateThrowSchema = z.object({
+  skittlesKnocked: z
+    .array(skittleNumberSchema)
+    .max(12, '倒せるスキットルは12本以下です')
+    .refine((arr) => {
+      if (arr.includes(0)) return true
+      return new Set(arr).size === arr.length
+    }, '同じスキットル番号を重複して指定することはできません'),
 })
 
 export type CreateUserInput = z.infer<typeof createUserSchema>

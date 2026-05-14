@@ -32,6 +32,25 @@ describe('calculateThrowScore', () => {
       expect(calculateThrowScore([i])).toBe(i)
     }
   })
+
+  describe('複数本モード（センチネル 0）', () => {
+    it('[0] は1本倒した扱い（番号不明）で1点', () => {
+      expect(calculateThrowScore([0])).toBe(1)
+    })
+
+    it('[0, 0, 0] は3本倒した扱いで3点', () => {
+      expect(calculateThrowScore([0, 0, 0])).toBe(3)
+    })
+
+    it('[0, 0, 0, 0, 0] は5本倒した扱いで5点', () => {
+      expect(calculateThrowScore([0, 0, 0, 0, 0])).toBe(5)
+    })
+
+    it('12個の 0 を含む場合は12点', () => {
+      const all = Array(12).fill(0)
+      expect(calculateThrowScore(all)).toBe(12)
+    })
+  })
 })
 
 // ============================================================

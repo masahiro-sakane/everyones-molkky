@@ -178,6 +178,20 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
               shareCode={match.shareCode}
               currentTeamId={currentThrower.teamId}
               currentUserId={currentThrower.userId}
+              onOptimisticThrow={async (pending) => {
+                const res = await fetch(`/api/matches/${match.shareCode}/throws`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId: pending.userId,
+                    teamId: pending.teamId,
+                    skittlesKnocked: pending.skittlesKnocked,
+                    faultType: pending.faultType ?? undefined,
+                  }),
+                })
+                if (!res.ok) throw new Error('投擲の記録に失敗しました')
+                router.refresh()
+              }}
             />
           </div>
         </section>

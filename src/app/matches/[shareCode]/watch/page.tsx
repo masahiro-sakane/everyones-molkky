@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { MatchBoard } from '@/components/match/MatchBoard'
+import { MatchView } from '@/components/match/MatchView'
 import { getMatchWithScores } from '@/services/matchService'
 import type { MatchData } from '@/hooks/useMatch'
 
@@ -82,7 +82,7 @@ export default async function WatchPage({ params }: PageProps) {
 
   return (
     <AppLayout>
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg md:max-w-7xl mx-auto">
         <div className="mb-4">
           <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-brand-50 border border-brand-200 rounded-full mb-2">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" aria-hidden="true" />
@@ -91,7 +91,7 @@ export default async function WatchPage({ params }: PageProps) {
           <h1 className="text-lg font-bold text-neutral-900">{matchTitle}</h1>
         </div>
 
-        <MatchBoard match={match} watchMode />
+        <MatchView match={match} watchMode />
       </div>
     </AppLayout>
   )

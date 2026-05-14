@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { MatchBoard } from '@/components/match/MatchBoard'
+import { MatchView } from '@/components/match/MatchView'
 import { getMatchWithScores } from '@/services/matchService'
 import type { MatchData } from '@/hooks/useMatch'
 
@@ -77,22 +77,10 @@ export default async function MatchPage({ params }: PageProps) {
     })),
   }
 
-  const isSolo = raw.matchType === 'SOLO'
-  const matchTitle = isSolo
-    ? raw.matchTeams.map((mt) => mt.team.name).join(', ') + '（個人戦）'
-    : raw.matchTeams.map((mt) => mt.team.name).join(' vs ')
-
   return (
     <AppLayout>
-      <div className="max-w-lg mx-auto">
-        <div className="mb-4">
-          <h1 className="text-lg font-bold text-neutral-900">{matchTitle}</h1>
-          <p className="text-xs text-neutral-400">
-            {raw.status === 'FINISHED' ? '試合終了' : '進行中'}
-          </p>
-        </div>
-
-        <MatchBoard match={match} />
+      <div className="max-w-lg md:max-w-7xl mx-auto">
+        <MatchView match={match} />
       </div>
     </AppLayout>
   )

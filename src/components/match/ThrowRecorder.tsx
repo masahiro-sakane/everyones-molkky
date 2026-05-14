@@ -1,9 +1,9 @@
 'use client'
 
-import { useActionState, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/Button'
-import { SkittleInput } from './SkittleInput'
-import { recordThrowAction, type MatchActionState } from '@/app/actions/match'
+import { ScoreInputPanel } from './ScoreInputPanel'
+import type { PendingThrow } from '@/hooks/useOptimisticMatch'
 
 type FaultType = 'MISS' | 'DROP' | 'STEP_OVER' | 'WRONG_ORDER'
 
@@ -11,10 +11,11 @@ type ThrowRecorderProps = {
   shareCode: string
   currentTeamId: string
   currentUserId: string
+  isFirstThrow?: boolean
   disabled?: boolean
+  onOptimisticThrow: (pending: PendingThrow) => Promise<void>
+  isPending?: boolean
 }
-
-const initialState: MatchActionState = {}
 
 const FAULT_LABELS: Record<FaultType, string> = {
   MISS: 'ミス（0本）',
@@ -24,33 +25,62 @@ const FAULT_LABELS: Record<FaultType, string> = {
 }
 
 export function ThrowRecorder({
-  shareCode,
   currentTeamId,
   currentUserId,
+  isFirstThrow = false,
   disabled = false,
+  onOptimisticThrow,
+  isPending = false,
 }: ThrowRecorderProps) {
-  const boundAction = recordThrowAction.bind(null, shareCode)
-  const [state, action, isPending] = useActionState(boundAction, initialState)
-
-  const [mode, setMode] = useState<'skittle' | 'fault'>('skittle')
-  const [selectedSkittles, setSelectedSkittles] = useState<number[]>([])
+  const [mode, setMode] = useState<'score' | 'fault'>('score')
   const [selectedFault, setSelectedFault] = useState<FaultType | null>(null)
-  const skittleFormRef = useRef<HTMLFormElement>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSkittleConfirm = (knocked: number[]) => {
-    setSelectedSkittles(knocked)
-    // state 更新は非同期のため、hidden input の value を直接書き換えてから submit する
-    const form = skittleFormRef.current
-    if (!form) return
-    const input = form.querySelector<HTMLInputElement>('input[name="skittlesKnocked"]')
-    if (input) input.value = JSON.stringify(knocked)
-    form.requestSubmit()
+  const isDisabled = disabled || isPending
+
+  const handleScoreConfirm = async (knocked: number[]) => {
+    setError(null)
+    try {
+      await onOptimisticThrow({
+        teamId: currentTeamId,
+        userId: currentUserId,
+        skittlesKnocked: knocked,
+        faultType: null,
+      })
+    } catch {
+      setError('投擲の記録に失敗しました')
+    }
   }
 
-  const isReady =
-    mode === 'skittle'
-      ? true
-      : selectedFault !== null
+  const handleMiss = async () => {
+    setError(null)
+    try {
+      await onOptimisticThrow({
+        teamId: currentTeamId,
+        userId: currentUserId,
+        skittlesKnocked: [],
+        faultType: null,
+      })
+    } catch {
+      setError('投擲の記録に失敗しました')
+    }
+  }
+
+  const handleFaultSubmit = async () => {
+    if (!selectedFault) return
+    setError(null)
+    try {
+      await onOptimisticThrow({
+        teamId: currentTeamId,
+        userId: currentUserId,
+        skittlesKnocked: [],
+        faultType: selectedFault,
+      })
+      setSelectedFault(null)
+    } catch {
+      setError('投擲の記録に失敗しました')
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,22 +88,22 @@ export function ThrowRecorder({
       <div className="flex gap-1 p-1 bg-neutral-100 rounded-md">
         <button
           type="button"
-          onClick={() => setMode('skittle')}
-          disabled={disabled || isPending}
-          data-testid="mode-skittle"
+          onClick={() => setMode('score')}
+          disabled={isDisabled}
+          data-testid="mode-score"
           className={[
             'flex-1 py-1.5 text-sm font-medium rounded transition-colors',
-            mode === 'skittle'
+            mode === 'score'
               ? 'bg-neutral-0 text-neutral-900 shadow-sm'
               : 'text-neutral-500 hover:text-neutral-700',
           ].join(' ')}
         >
-          スキットル
+          得点入力
         </button>
         <button
           type="button"
           onClick={() => setMode('fault')}
-          disabled={disabled || isPending}
+          disabled={isDisabled}
           data-testid="mode-fault"
           className={[
             'flex-1 py-1.5 text-sm font-medium rounded transition-colors',
@@ -86,44 +116,28 @@ export function ThrowRecorder({
         </button>
       </div>
 
-      {mode === 'skittle' ? (
-        <form action={action} ref={skittleFormRef}>
-          <input type="hidden" name="userId" value={currentUserId} />
-          <input type="hidden" name="teamId" value={currentTeamId} />
-          <input
-            type="hidden"
-            name="skittlesKnocked"
-            value={JSON.stringify(selectedSkittles)}
-          />
-
-          <SkittleInput
-            onConfirm={handleSkittleConfirm}
-            disabled={disabled || isPending}
+      {mode === 'score' ? (
+        <div>
+          <ScoreInputPanel
+            isFirstThrow={isFirstThrow}
+            onConfirm={handleScoreConfirm}
+            onMiss={handleMiss}
+            disabled={isDisabled}
             isLoading={isPending}
           />
-
-          {state.message && (
-            <p role="alert" className="mt-2 text-sm text-danger-600">
-              {state.message}
-            </p>
+          {error && (
+            <p role="alert" className="mt-2 text-sm text-danger-600">{error}</p>
           )}
-        </form>
+        </div>
       ) : (
-        <form action={action} className="flex flex-col gap-3">
-          <input type="hidden" name="userId" value={currentUserId} />
-          <input type="hidden" name="teamId" value={currentTeamId} />
-          <input type="hidden" name="skittlesKnocked" value="[]" />
-          {selectedFault && (
-            <input type="hidden" name="faultType" value={selectedFault} />
-          )}
-
+        <div className="flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-2">
             {(Object.keys(FAULT_LABELS) as FaultType[]).map((fault) => (
               <button
                 key={fault}
                 type="button"
                 onClick={() => setSelectedFault(fault)}
-                disabled={disabled || isPending}
+                disabled={isDisabled}
                 className={[
                   'px-3 py-2.5 rounded-md border text-sm font-medium transition-colors text-left',
                   selectedFault === fault
@@ -137,22 +151,21 @@ export function ThrowRecorder({
             ))}
           </div>
 
-          {state.message && (
-            <p role="alert" className="text-sm text-danger-600">
-              {state.message}
-            </p>
+          {error && (
+            <p role="alert" className="text-sm text-danger-600">{error}</p>
           )}
 
           <Button
-            type="submit"
+            type="button"
             variant="danger"
             isLoading={isPending}
-            disabled={!selectedFault || disabled}
+            disabled={!selectedFault || isDisabled}
+            onClick={handleFaultSubmit}
             data-testid="record-fault"
           >
             フォルトを記録
           </Button>
-        </form>
+        </div>
       )}
     </div>
   )

@@ -19,6 +19,7 @@ export async function createMatch(input: CreateMatchInput) {
         limitType,
         turnLimit: limitType === 'TURNS' ? (validated.turnLimit ?? 12) : null,
         timeLimitMinutes: limitType === 'TIME' ? (validated.timeLimitMinutes ?? 20) : null,
+        totalSets: validated.totalSets ?? 1,
       },
     })
 
@@ -91,6 +92,7 @@ export async function createSoloMatch(input: CreateSoloMatchInput) {
         limitType,
         turnLimit: limitType === 'TURNS' ? (validated.turnLimit ?? 12) : null,
         timeLimitMinutes: limitType === 'TIME' ? (validated.timeLimitMinutes ?? 20) : null,
+        totalSets: validated.totalSets ?? 1,
       },
     })
 
@@ -160,7 +162,9 @@ export async function getMatchByShareCode(shareCode: string) {
     where: { shareCode },
     include: {
       matchTeams: {
-        include: { team: true },
+        include: {
+          team: { include: { members: { include: { user: true }, orderBy: { joinedAt: 'asc' } } } },
+        },
         orderBy: { order: 'asc' },
       },
       sets: {
@@ -219,6 +223,70 @@ export async function deleteMatch(matchId: string) {
   return db.match.delete({ where: { id: matchId } })
 }
 
+/**
+ * 次のゲーム（セット）を開始する。
+ * - チームの投擲順（order）を逆順にする
+ * - 各チームのメンバー投擲順（memberOrder）を逆順にする
+ * - 新セットの TeamSetScore と Turn#1 を作成する
+ */
+export async function startNextSet(shareCode: string) {
+  return db.$transaction(async (tx) => {
+    const match = await tx.match.findUnique({
+      where: { shareCode },
+      include: {
+        matchTeams: { orderBy: { order: 'asc' } },
+        sets: { orderBy: { setNumber: 'desc' }, take: 1 },
+      },
+    })
+    if (!match) throw new Error('試合が見つかりません')
+
+    const lastSet = match.sets[0]
+    if (!lastSet || lastSet.status !== 'FINISHED') {
+      throw new Error('現在のゲームがまだ完了していません')
+    }
+
+    const nextSetNumber = lastSet.setNumber + 1
+    if (nextSetNumber > match.totalSets) {
+      throw new Error('全ゲームが完了しています')
+    }
+
+    const teamCount = match.matchTeams.length
+
+    // チーム投擲順を逆順に更新（order 1→N, 2→N-1, ...）
+    for (const mt of match.matchTeams) {
+      const newOrder = teamCount + 1 - mt.order
+      const newMemberOrder = [...mt.memberOrder].reverse()
+      await tx.matchTeam.update({
+        where: { id: mt.id },
+        data: { order: newOrder, memberOrder: newMemberOrder },
+      })
+    }
+
+    // 新セット作成
+    const newSet = await tx.set.create({
+      data: { matchId: match.id, setNumber: nextSetNumber },
+    })
+
+    // TeamSetScore 初期化
+    await tx.teamSetScore.createMany({
+      data: match.matchTeams.map((mt) => ({
+        setId: newSet.id,
+        teamId: mt.teamId,
+        totalScore: 0,
+        consecutiveMisses: 0,
+        isDisqualified: false,
+      })),
+    })
+
+    // Turn#1 作成
+    await tx.turn.create({
+      data: { setId: newSet.id, turnNumber: 1 },
+    })
+
+    return newSet
+  })
+}
+
 export async function getTeamSetScores(setId: string) {
   return db.teamSetScore.findMany({
     where: { setId },
@@ -230,7 +298,7 @@ export async function getMatchWithScores(shareCode: string) {
     where: { shareCode },
     include: {
       matchTeams: {
-        include: { team: { include: { members: { include: { user: true } } } } },
+        include: { team: { include: { members: { include: { user: true }, orderBy: { joinedAt: 'asc' } } } } },
         orderBy: { order: 'asc' },
       },
       sets: {

@@ -7,12 +7,14 @@ const MAX_CONSECUTIVE_MISSES = 3
 
 /**
  * 1投の基本得点を計算する
- * - 1本倒し: そのスキットルの番号
- * - 複数本倒し: 倒した本数
- * - 0本: 0点
+ * - 0本（空配列）: 0点
+ * - 配列に 0（センチネル）を含む: 倒した本数 = 配列長（複数本モード入力）
+ * - 1本倒し（長さ1かつ 0 を含まない）: そのスキットルの番号が得点
+ * - 複数本倒し（長さ2以上で 0 を含まない）: 倒した本数が得点
  */
 export function calculateThrowScore(skittlesKnocked: number[]): number {
   if (skittlesKnocked.length === 0) return 0
+  if (skittlesKnocked.includes(0)) return skittlesKnocked.length
   if (skittlesKnocked.length === 1) return skittlesKnocked[0]
   return skittlesKnocked.length
 }

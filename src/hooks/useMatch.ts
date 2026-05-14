@@ -169,15 +169,20 @@ export function useMatch(match: MatchData) {
     const latestTurn = turns.at(-1)
     if (!latestTurn) return null
 
-    // ターン番号からチームを特定（ラウンドロビン）
+    // 空ターン（投擲待ち）のターン番号を使う
+    // 投擲済みターンが末尾の場合（Optimistic UI等）は +1 した番号を使う
+    const currentTurnNumber = latestTurn.throws.length === 0
+      ? latestTurn.turnNumber
+      : latestTurn.turnNumber + 1
+
     const teamCount = match.matchTeams.length
-    const teamIndex = (latestTurn.turnNumber - 1) % teamCount
+    const teamIndex = (currentTurnNumber - 1) % teamCount
     const currentMatchTeam = match.matchTeams.find((mt) => mt.order === teamIndex + 1)
     if (!currentMatchTeam) return null
 
     const team = currentMatchTeam.team
     const members = sortMembers(team.members, currentMatchTeam.memberOrder)
-    const memberIndex = Math.floor((latestTurn.turnNumber - 1) / teamCount) % Math.max(members.length, 1)
+    const memberIndex = Math.floor((currentTurnNumber - 1) / teamCount) % Math.max(members.length, 1)
     const thrower = members[memberIndex] ?? members[0]
 
     return {
@@ -203,8 +208,12 @@ export function useMatch(match: MatchData) {
       (match.teamSetScores ?? []).filter((s) => s.isDisqualified).map((s) => s.teamId)
     )
 
-    // 失格チームをスキップして次のチームを探す
-    let nextTurnNumber = latestTurn.turnNumber + 1
+    // 現在のターン番号の次から検索
+    const currentTurnNumber = latestTurn.throws.length === 0
+      ? latestTurn.turnNumber
+      : latestTurn.turnNumber + 1
+
+    let nextTurnNumber = currentTurnNumber + 1
     for (let i = 0; i < teamCount; i++) {
       const teamIndex = (nextTurnNumber - 1) % teamCount
       const nextMatchTeam = match.matchTeams.find((mt) => mt.order === teamIndex + 1)
