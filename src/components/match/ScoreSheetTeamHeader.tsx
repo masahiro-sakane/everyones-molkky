@@ -35,7 +35,7 @@ export function ScoreSheetTeamHeader({ columns }: ScoreSheetTeamHeaderProps) {
               scope="colgroup"
               colSpan={colSpan}
               className={[
-                'border-r-2 border-neutral-400 px-2 py-1 text-left',
+                'border-r-2 border-neutral-400 px-2 py-1 text-center',
                 col.isDisqualified ? 'bg-neutral-100' : '',
                 col.isWinner ? 'bg-success-50' : '',
               ].join(' ')}
