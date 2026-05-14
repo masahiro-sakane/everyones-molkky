@@ -187,6 +187,26 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             </div>
           )}
 
+          {/* 順位 */}
+          {sheet.rankings.length > 0 && (
+            <div className="flex flex-col gap-1.5 px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-md">
+              {sheet.rankings.map((r) => (
+                <div key={r.teamId} className="flex items-center gap-2 text-sm" data-testid={`rank-${r.rank}`}>
+                  <span className={[
+                    'inline-flex items-center justify-center w-10 h-6 rounded-full text-xs font-bold shrink-0',
+                    r.rank === 1 ? 'bg-warning-100 text-warning-700 border border-warning-400' : 'bg-neutral-200 text-neutral-700',
+                  ].join(' ')}>
+                    {r.rank}位
+                  </span>
+                  <span className={[r.isDisqualified ? 'line-through text-neutral-400' : 'text-neutral-900', 'font-medium'].join(' ')}>
+                    {r.teamName}
+                  </span>
+                  <span className="text-neutral-500 tabular-nums ml-auto">({r.totalScore})</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* アクション */}
           <div className="flex items-center gap-2 justify-end">
             {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
