@@ -116,7 +116,8 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
   )
 
   const currentThrower = matchState.currentThrower
-  const isFinished = matchState.isFinished && !!matchState.winnerTeamId
+  // 試合全体が終了しているか（match.status === 'FINISHED'）
+  const isFinished = matchState.isFinished
   const setTransitionInfo = matchState.setTransitionInfo
 
   return (

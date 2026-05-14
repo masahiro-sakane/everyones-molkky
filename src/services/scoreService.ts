@@ -165,8 +165,10 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
         data: { status: 'FINISHED', winnerId: finalWinnerId },
       })
 
-      // _count で取得済みのターン数を使って全セット完了を判定（追加クエリを避ける）
-      const finishedSetsCount = match.sets.filter((s) => s.status === 'FINISHED').length + 1
+      // 完了セット数をDBから取得（match.setsはIN_PROGRESSのみのため直接使えない）
+      const finishedSetsCount = await tx.set.count({
+        where: { matchId: match.id, status: 'FINISHED' },
+      })
 
       if (finishedSetsCount >= match.totalSets) {
         await tx.match.update({

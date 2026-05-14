@@ -260,8 +260,19 @@ export function useMatch(match: MatchData) {
     [teamScores]
   )
 
-  // 勝者
-  const winnerTeamId = currentSet?.winnerId ?? null
+  // 試合優勝者: 試合FINISHED時は最多セット勝利チーム、単セットは最終セット勝者
+  const winnerTeamId = useMemo(() => {
+    if (match.status !== 'FINISHED') return currentSet?.winnerId ?? null
+    // セット勝利数を集計
+    const wins = new Map<string, number>()
+    for (const s of match.sets) {
+      if (s.winnerId) wins.set(s.winnerId, (wins.get(s.winnerId) ?? 0) + 1)
+    }
+    if (wins.size === 0) return currentSet?.winnerId ?? null
+    const maxWins = Math.max(...wins.values())
+    const topTeams = [...wins.entries()].filter(([, w]) => w === maxWins)
+    return topTeams.length === 1 ? topTeams[0][0] : (currentSet?.winnerId ?? null)
+  }, [match.status, match.sets, currentSet])
 
   // セット間遷移状態: 直近セットがFINISHEDで試合がまだ続いている
   const setTransitionInfo = useMemo(() => {
