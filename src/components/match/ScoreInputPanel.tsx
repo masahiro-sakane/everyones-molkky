@@ -125,7 +125,7 @@ function ScoreInputPanelInner({
 
 {/* 1〜12 パネル */}
       <div
-        className="grid grid-cols-3 grid-rows-4 gap-2 flex-1 min-h-0"
+        className="grid grid-cols-3 grid-rows-4 flex-1 min-h-0"
         role="radiogroup"
         aria-label={mode === 'single' ? 'スキットル番号' : '倒した本数'}
       >
@@ -141,13 +141,13 @@ function ScoreInputPanelInner({
               disabled={disabled || isLoading}
               data-testid={`score-${n}`}
               className={[
-                'rounded-md border-2 text-lg font-bold transition-all w-full h-full',
+                'border text-lg font-bold transition-colors w-full h-full -m-px',
                 'flex items-center justify-center',
-                'focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:outline-offset-2',
+                'focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:outline-offset-[-2px] focus-visible:z-10',
                 'disabled:opacity-40 disabled:cursor-not-allowed',
                 isSelected
-                  ? 'bg-brand-500 text-neutral-0 border-brand-600 scale-105 shadow-md'
-                  : 'bg-neutral-0 text-neutral-800 border-neutral-300 hover:border-brand-400 hover:bg-brand-50 active:scale-95',
+                  ? 'bg-brand-500 text-neutral-0 border-brand-600 z-10'
+                  : 'bg-neutral-0 text-neutral-800 border-neutral-300 hover:bg-brand-50 hover:z-10',
               ].join(' ')}
             >
               {n}
