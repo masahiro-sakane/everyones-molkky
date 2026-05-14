@@ -45,7 +45,7 @@ export function ScoreSheetCell({
 
   // 現在投擲セル
   if (isCurrent) {
-    baseClass.push('bg-warning-50 ring-2 ring-warning-400 ring-inset z-10')
+    baseClass.push('bg-brand-100 ring-2 ring-brand-500 ring-inset z-10')
   }
 
   const isEditable = onClick && cell.throwId !== null &&
