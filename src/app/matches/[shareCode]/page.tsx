@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { AppLayout } from '@/components/layout/AppLayout'
+import { MatchLayout } from '@/components/layout/MatchLayout'
 import { MatchView } from '@/components/match/MatchView'
 import { getMatchWithScores } from '@/services/matchService'
 import { toMatchData } from '@/lib/matchDataMapper'
@@ -21,10 +21,8 @@ export default async function MatchPage({ params }: PageProps) {
   const match = toMatchData(raw)
 
   return (
-    <AppLayout>
-      <div className="max-w-lg md:max-w-7xl mx-auto">
-        <MatchView match={match} />
-      </div>
-    </AppLayout>
+    <MatchLayout>
+      <MatchView match={match} />
+    </MatchLayout>
   )
 }
