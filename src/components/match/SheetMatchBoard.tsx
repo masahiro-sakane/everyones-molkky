@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { useScoreSheet } from '@/hooks/useScoreSheet'
@@ -13,6 +13,7 @@ import { ShareButton } from './ShareButton'
 import { ConnectionStatus } from './ConnectionStatus'
 import { MatchLimitStatus } from './MatchLimitStatus'
 import { WinnerBanner } from './WinnerBanner'
+import { ScoreCellEditPopover, type EditTarget } from './ScoreCellEditPopover'
 
 type SheetMatchBoardProps = {
   match: MatchData
@@ -22,6 +23,8 @@ type SheetMatchBoardProps = {
 
 export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardProps) {
   const router = useRouter()
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
+  const sheetContainerRef = useRef<HTMLDivElement>(null)
   const { optimisticMatch, isPending, applyOptimistic, syncFromServer, rollback } =
     useOptimisticMatch(match)
 
@@ -113,7 +116,24 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
       <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_360px] gap-4">
         {/* スコアシート */}
         <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2">
-          <ScoreSheetView data={sheet} />
+          <div ref={sheetContainerRef} className="relative">
+            <ScoreSheetView
+              data={sheet}
+              onEditCell={!watchMode && !isFinished ? (throwId, skittles) => setEditTarget({ throwId, currentSkittles: skittles }) : undefined}
+            />
+            {editTarget && (
+              <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
+                <div className="pointer-events-auto">
+                  <ScoreCellEditPopover
+                    target={editTarget}
+                    shareCode={match.shareCode}
+                    onDone={() => { setEditTarget(null); router.refresh() }}
+                    onCancel={() => setEditTarget(null)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
           <div className="flex items-center justify-end gap-2 pt-1">
             <ShareButton shareCode={match.shareCode} />
             <ConnectionStatus status={connStatus} />

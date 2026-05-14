@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
-import { recordThrowSchema } from '@/lib/validation'
-import { processThrow } from '@/lib/scoring'
+import { recordThrowSchema, updateThrowSchema } from '@/lib/validation'
+import { processThrow, calculateThrowScore } from '@/lib/scoring'
 import type { z } from 'zod'
 
 export type RecordThrowInput = z.infer<typeof recordThrowSchema>
@@ -190,6 +190,75 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
       throw: newThrow,
       result: throwResult,
     }
+  })
+}
+
+export type UpdateThrowInput = z.infer<typeof updateThrowSchema>
+
+/**
+ * 投擲記録を修正し、そのチームの teamSetScore を全投擲から再計算して更新する。
+ * 再計算は「そのセット内のそのチームの全投擲を時系列順にシミュレート」して行う。
+ */
+export async function updateThrow(shareCode: string, throwId: string, input: UpdateThrowInput) {
+  const validated = updateThrowSchema.parse(input)
+
+  return db.$transaction(async (tx) => {
+    const match = await tx.match.findUnique({
+      where: { shareCode },
+      include: { sets: { where: { status: 'IN_PROGRESS' }, take: 1 } },
+    })
+    if (!match) throw new Error('試合が見つかりません')
+    if (match.status !== 'IN_PROGRESS') throw new Error('試合は進行中ではありません')
+
+    const currentSet = match.sets[0]
+    if (!currentSet) throw new Error('進行中のセットがありません')
+
+    // 対象の投擲を取得
+    const targetThrow = await tx.throw.findUnique({ where: { id: throwId } })
+    if (!targetThrow) throw new Error('投擲が見つかりません')
+
+    const newScore = calculateThrowScore(validated.skittlesKnocked)
+
+    // 投擲レコードを更新
+    await tx.throw.update({
+      where: { id: throwId },
+      data: {
+        skittlesKnocked: validated.skittlesKnocked,
+        score: newScore,
+        isFault: false,
+        faultType: null,
+      },
+    })
+
+    // そのチームの全投擲を時系列順に再取得してスコアを再計算
+    const allThrows = await tx.throw.findMany({
+      where: { turn: { setId: currentSet.id }, teamId: targetThrow.teamId },
+      orderBy: [{ turn: { turnNumber: 'asc' } }, { throwOrder: 'asc' }],
+    })
+
+    let totalScore = 0
+    let consecutiveMisses = 0
+    let isDisqualified = false
+
+    for (const t of allThrows) {
+      const result = processThrow({
+        currentScore: totalScore,
+        consecutiveMisses,
+        throwInput: {
+          skittlesKnocked: t.skittlesKnocked,
+          faultType: t.faultType as Parameters<typeof processThrow>[0]['throwInput']['faultType'],
+        },
+      })
+      totalScore = result.totalScore
+      consecutiveMisses = result.consecutiveMisses
+      isDisqualified = result.isDisqualified
+      if (result.isWinner) break
+    }
+
+    await tx.teamSetScore.update({
+      where: { setId_teamId: { setId: currentSet.id, teamId: targetThrow.teamId } },
+      data: { totalScore, consecutiveMisses, isDisqualified },
+    })
   })
 }
 

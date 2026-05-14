@@ -8,6 +8,7 @@ type ScoreSheetRowProps = {
   row: Row
   columns: TeamColumn[]
   currentCell: CurrentCellPosition | null
+  onEditCell?: (throwId: string, skittles: number[]) => void
 }
 
 /**
@@ -18,6 +19,7 @@ export const ScoreSheetRow = memo(function ScoreSheetRow({
   row,
   columns,
   currentCell,
+  onEditCell,
 }: ScoreSheetRowProps) {
   return (
     <tr className="border-b border-neutral-200">
@@ -33,7 +35,6 @@ export const ScoreSheetRow = memo(function ScoreSheetRow({
         const cells = row.cellsByTeam.get(col.teamId) ?? []
         const cumulative = row.cumulativeByTeam.get(col.teamId)
 
-        // 計列表示: その行に投擲データがある場合のみ
         const hasThrow = cumulative?.hasThrowInRow ?? false
 
         return (
@@ -45,6 +46,7 @@ export const ScoreSheetRow = memo(function ScoreSheetRow({
             currentCell={currentCell}
             rowIndex={row.rowIndex}
             hasThrow={hasThrow}
+            onEditCell={onEditCell}
           />
         )
       })}
@@ -58,6 +60,7 @@ type TeamRowSectionProps = {
   cumulative: ReturnType<Row['cumulativeByTeam']['get']>
   currentCell: CurrentCellPosition | null
   rowIndex: number
+  onEditCell?: (throwId: string, skittles: number[]) => void
 }
 
 function TeamRowSection({
@@ -67,6 +70,7 @@ function TeamRowSection({
   currentCell,
   rowIndex,
   hasThrow,
+  onEditCell,
 }: TeamRowSectionProps & { hasThrow: boolean }) {
   return (
     <>
@@ -78,12 +82,29 @@ function TeamRowSection({
           currentCell.userId === cell.userId &&
           cell.value.kind === 'empty'
 
+        const throwId = cell.throwId
+        const handleClick =
+          onEditCell && throwId
+            ? () => {
+                const skittles =
+                  cell.value.kind === 'miss' || cell.value.kind === 'disqualified'
+                    ? []
+                    : cell.value.kind === 'score'
+                      ? [cell.value.n]
+                      : cell.value.kind === 'reset'
+                        ? [cell.value.score]
+                        : [] // goal はミス扱いで開く
+                onEditCell(throwId, skittles)
+              }
+            : undefined
+
         return (
           <ScoreSheetCell
             key={`${column.teamId}-${i}`}
             cell={cell}
             isCurrent={isCurrent}
             isTeamDisqualified={column.isDisqualified}
+            onClick={handleClick}
           />
         )
       })}

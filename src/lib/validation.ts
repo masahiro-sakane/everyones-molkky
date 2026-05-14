@@ -74,6 +74,17 @@ export const recordThrowSchema = z.object({
   faultType: z.enum(['MISS', 'DROP', 'STEP_OVER', 'WRONG_ORDER']).nullable().optional(),
 })
 
+// 投擲修正（得点のみ変更可能）
+export const updateThrowSchema = z.object({
+  skittlesKnocked: z
+    .array(skittleNumberSchema)
+    .max(12, '倒せるスキットルは12本以下です')
+    .refine((arr) => {
+      if (arr.includes(0)) return true
+      return new Set(arr).size === arr.length
+    }, '同じスキットル番号を重複して指定することはできません'),
+})
+
 export type CreateUserInput = z.infer<typeof createUserSchema>
 export type UpdateUserInput = z.infer<typeof updateUserSchema>
 export type CreateTeamInput = z.infer<typeof createTeamSchema>
