@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 const navItems = [
   {
@@ -43,12 +44,53 @@ const navItems = [
   },
 ]
 
+// ページ下端から何px以内でフッターを表示するか
+const BOTTOM_THRESHOLD = 80
+// 操作後に隠れるまでの時間 (ms)
+const HIDE_DELAY = 2500
+
 type MatchLayoutProps = {
   children: ReactNode
 }
 
 export function MatchLayout({ children }: MatchLayoutProps) {
   const pathname = usePathname()
+  const [isVisible, setIsVisible] = useState(false)
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const show = useCallback(() => {
+    setIsVisible(true)
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+    hideTimerRef.current = setTimeout(() => setIsVisible(false), HIDE_DELAY)
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const distanceFromBottom =
+        document.documentElement.scrollHeight - window.scrollY - window.innerHeight
+      if (distanceFromBottom <= BOTTOM_THRESHOLD) {
+        // 下端付近: タイマーなしで常時表示
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+        setIsVisible(true)
+      } else {
+        show()
+      }
+    }
+
+    const handlePointerMove = () => show()
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
+    // タッチ操作（スマホ）
+    window.addEventListener('touchstart', handlePointerMove, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('touchstart', handlePointerMove)
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+    }
+  }, [show])
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-100">
@@ -58,7 +100,9 @@ export function MatchLayout({ children }: MatchLayoutProps) {
 
       {/* フッターナビゲーション */}
       <nav
-        className="fixed bottom-0 inset-x-0 bg-neutral-0 border-t border-neutral-300 shadow-[0_-1px_4px_rgba(0,0,0,0.06)] z-40 safe-area-pb"
+        className={`fixed bottom-0 inset-x-0 bg-neutral-0 border-t border-neutral-300 shadow-[0_-1px_4px_rgba(0,0,0,0.06)] z-40 transition-transform duration-200 ${
+          isVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
         aria-label="メインナビゲーション"
       >
         <div className="flex items-stretch max-w-lg md:max-w-2xl mx-auto">
