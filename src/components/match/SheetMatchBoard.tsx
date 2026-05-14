@@ -122,11 +122,41 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
       )}
 
       {/* スコアシート + 入力パネル
-          - lg以上: 横並び（シート左・入力右sticky）
-          - lg未満: 入力パネルを上、シートを下（入力欄が常に画面上部に見える） */}
-      <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_360px] gap-4">
+          - lg以上: 横並び（シート左・入力右 viewport固定）
+          - lg未満: 入力パネルを上（画面内に収まる固定高さ）、シートを下 */}
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_360px] gap-4 lg:items-start">
+        {/* 入力パネル（観戦モード以外） */}
+        {!watchMode && currentThrower && (
+          <aside
+            aria-label="投擲記録"
+            className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1"
+          >
+            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-4 overflow-y-auto max-h-[calc(100svh-6rem)] lg:max-h-[calc(100svh-5rem)]">
+              <ThrowRecorder
+                shareCode={match.shareCode}
+                currentTeamId={currentThrower.teamId}
+                currentUserId={currentThrower.userId}
+                isFirstThrow={sheet.isFirstThrow}
+                consecutiveMisses={matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)?.consecutiveMisses ?? 0}
+                onOptimisticThrow={handleOptimisticThrow}
+                isPending={isPending}
+              />
+            </div>
+          </aside>
+        )}
+
+        {watchMode && (
+          <aside className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1">
+            <div className="text-center py-3 bg-neutral-50 border border-neutral-200 rounded-lg">
+              <p className="text-xs text-neutral-500">
+                観戦モード — スコアはリアルタイムで更新されます
+              </p>
+            </div>
+          </aside>
+        )}
+
         {/* スコアシート */}
-        <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2">
+        <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2 lg:order-1 order-2">
           <div ref={sheetContainerRef}>
             <ScoreSheetView
               data={sheet}
@@ -146,36 +176,6 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
             <ConnectionStatus status={connStatus} />
           </div>
         </section>
-
-        {/* 入力パネル（観戦モード以外） */}
-        {!watchMode && currentThrower && (
-          <aside
-            aria-label="投擲記録"
-            className="lg:sticky lg:top-20 lg:self-start"
-          >
-            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-4">
-              <ThrowRecorder
-                shareCode={match.shareCode}
-                currentTeamId={currentThrower.teamId}
-                currentUserId={currentThrower.userId}
-                isFirstThrow={sheet.isFirstThrow}
-                consecutiveMisses={matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)?.consecutiveMisses ?? 0}
-                onOptimisticThrow={handleOptimisticThrow}
-                isPending={isPending}
-              />
-            </div>
-          </aside>
-        )}
-
-        {watchMode && (
-          <aside className="lg:sticky lg:top-20 lg:self-start">
-            <div className="text-center py-3 bg-neutral-50 border border-neutral-200 rounded-lg">
-              <p className="text-xs text-neutral-500">
-                観戦モード — スコアはリアルタイムで更新されます
-              </p>
-            </div>
-          </aside>
-        )}
       </div>
     </div>
   )
