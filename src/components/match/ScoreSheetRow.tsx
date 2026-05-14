@@ -3,6 +3,7 @@
 import { memo } from 'react'
 import type { ScoreSheetRow as Row, TeamColumn, CurrentCellPosition } from '@/types/scoreSheet'
 import { ScoreSheetCell } from './ScoreSheetCell'
+import { WinHintButton } from './WinHintButton'
 
 type ScoreSheetRowProps = {
   row: Row
@@ -77,6 +78,16 @@ function TeamRowSection({
   onEditCell,
   editingThrowId,
 }: TeamRowSectionProps & { hasThrow: boolean }) {
+  const hasCurrentCell = cells.some(
+    (cell) =>
+      currentCell !== null &&
+      currentCell.rowIndex === rowIndex &&
+      currentCell.teamId === column.teamId &&
+      currentCell.userId === cell.userId &&
+      cell.value.kind === 'empty'
+  )
+  const currentTotal = cumulative?.total ?? 0
+
   return (
     <>
       {cells.map((cell, i) => {
@@ -120,7 +131,7 @@ function TeamRowSection({
       <td
         className={[
           'h-9 min-w-[3rem] border-r-2 border-neutral-400 bg-neutral-50',
-          'text-center text-sm font-bold tabular-nums',
+          'text-center text-sm font-bold tabular-nums relative',
           column.isDisqualified ? 'text-neutral-400' : 'text-neutral-900',
           cumulative?.isWinner ? 'text-success-700' : '',
           cumulative?.hasReset ? 'text-warning-700' : '',
@@ -131,6 +142,11 @@ function TeamRowSection({
         {hasThrow && cumulative?.hasReset && (
           <span className="text-[10px] ml-0.5" title="50超過でリセット">
             ↩
+          </span>
+        )}
+        {hasCurrentCell && (
+          <span className="absolute -top-1 -right-1">
+            <WinHintButton currentTotal={currentTotal} />
           </span>
         )}
       </td>
