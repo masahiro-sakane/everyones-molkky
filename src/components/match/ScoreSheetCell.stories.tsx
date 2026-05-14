@@ -35,7 +35,7 @@ export const Empty: Story = {
 }
 
 export const Score: Story = {
-  args: { cell: { ...baseCell, value: { kind: 'score', n: 7 } } },
+  args: { cell: { ...baseCell, value: { kind: 'score', n: 7, isSingle: false } } },
 }
 
 export const Miss: Story = {

@@ -12,7 +12,7 @@ export type ScoreCellValue =
   | { kind: 'pending' } // 現在投擲中
   | { kind: 'miss' } // ミス（0点、─表示）
   | { kind: 'fault'; faultType: string } // フォルト
-  | { kind: 'score'; n: number } // 通常得点
+  | { kind: 'score'; n: number; isSingle: boolean } // 通常得点（isSingle: 1本倒し）
   | { kind: 'goal' } // 50点到達（○表示）
   | { kind: 'reset'; score: number } // 50点超過で25にリセット（score は投擲した点数）
   | { kind: 'disqualified' } // 失格後の行

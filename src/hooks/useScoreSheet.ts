@@ -49,7 +49,8 @@ function deriveCellValue(
   throwScore: number,
   prevTotal: number,
   isFault: boolean,
-  faultType: string | null
+  faultType: string | null,
+  skittlesKnocked: number[] = []
 ): { value: ScoreCellValue; nextTotal: number; isWinner: boolean; hasReset: boolean } {
   // フォルトの場合
   if (isFault) {
@@ -103,7 +104,7 @@ function deriveCellValue(
   }
 
   return {
-    value: { kind: 'score', n: throwScore },
+    value: { kind: 'score', n: throwScore, isSingle: skittlesKnocked.length === 1 },
     nextTotal: candidateTotal,
     isWinner: false,
     hasReset: false,
@@ -177,6 +178,7 @@ export function useScoreSheet(match: MatchData): ScoreSheetData {
       score: number
       isFault: boolean
       faultType: string | null
+      skittlesKnocked: number[]
       turnNumber: number
       rowIndex: number   // 0始まり
       colIndex: number   // columns内のindex
@@ -195,6 +197,7 @@ export function useScoreSheet(match: MatchData): ScoreSheetData {
             score: t.score,
             isFault: t.isFault,
             faultType: t.faultType,
+            skittlesKnocked: t.skittlesKnocked,
             turnNumber: turn.turnNumber,
             rowIndex,
             colIndex,
@@ -269,7 +272,8 @@ export function useScoreSheet(match: MatchData): ScoreSheetData {
             throwAtRow.score,
             prevTotal,
             throwAtRow.isFault,
-            throwAtRow.faultType
+            throwAtRow.faultType,
+            throwAtRow.skittlesKnocked
           )
           throwCellValue = derived.value
           nextTotal = derived.nextTotal

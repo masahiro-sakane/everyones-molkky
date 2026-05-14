@@ -101,7 +101,16 @@ function CellContent({ value }: { value: Cell['value'] }) {
         </span>
       )
     case 'score':
-      return <span className="font-medium text-neutral-900">{value.n}</span>
+      return value.isSingle ? (
+        <span
+          className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-neutral-700 font-medium text-neutral-900 text-xs leading-none"
+          aria-label={`${value.n}番スキットル（1本倒し）`}
+        >
+          {value.n}
+        </span>
+      ) : (
+        <span className="font-medium text-neutral-900">{value.n}</span>
+      )
     case 'goal':
       return (
         <span

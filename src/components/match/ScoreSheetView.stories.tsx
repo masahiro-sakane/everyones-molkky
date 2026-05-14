@@ -50,7 +50,7 @@ function buildSampleRows(
         leadMarkerNumber: r === 0 && mi === 0 ? 1 : undefined,
         value:
           mi === r % col.members.length
-            ? ({ kind: 'score', n: (r + mi + 1) * 2 } as const)
+            ? ({ kind: 'score', n: (r + mi + 1) * 2, isSingle: false } as const)
             : ({ kind: 'empty' } as const),
       }))
       cellsByTeam.set(col.teamId, cells)
