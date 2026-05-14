@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const navItems = [
   { href: '/', label: 'ホーム' },
@@ -13,9 +13,33 @@ const navItems = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const lastScrollY = useRef(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY
+      if (currentY < 10) {
+        setIsVisible(true)
+      } else if (currentY < lastScrollY.current) {
+        setIsVisible(true)
+      } else if (currentY > lastScrollY.current + 4) {
+        setIsVisible(false)
+        setIsMenuOpen(false)
+      }
+      lastScrollY.current = currentY
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <header className="bg-neutral-0 border-b border-neutral-300 shadow-sm sticky top-0 z-40">
+    <header
+      className={`bg-neutral-0 border-b border-neutral-300 shadow-sm sticky top-0 z-40 transition-transform duration-200 ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}
+    >
       <div className="max-w-5xl mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
