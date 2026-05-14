@@ -163,7 +163,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
               remainingRounds={matchState.remainingRounds}
               currentRound={matchState.currentRound}
             />
-            <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
               <ThrowRecorder
                 shareCode={match.shareCode}
                 currentTeamId={currentThrower.teamId}

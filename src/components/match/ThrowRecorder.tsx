@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ScoreInputPanel } from './ScoreInputPanel'
 import type { PendingThrow } from '@/hooks/useOptimisticMatch'
@@ -34,7 +34,7 @@ export function ThrowRecorder({
   onOptimisticThrow,
   isPending = false,
 }: ThrowRecorderProps) {
-  const [mode, setMode] = useState<'score' | 'fault'>('score')
+  const [faultOpen, setFaultOpen] = useState(false)
   const [selectedFault, setSelectedFault] = useState<FaultType | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -79,21 +79,19 @@ export function ThrowRecorder({
         faultType: selectedFault,
       })
       setSelectedFault(null)
+      setFaultOpen(false)
     } catch {
       setError('投擲の記録に失敗しました')
     }
   }
 
   return (
-    <div className="flex flex-col gap-3 flex-1 min-h-0">
-      {/* スペーサー: 入力UIを下部に押し下げる */}
-      <div className="flex-1" />
-
+    <div className="flex flex-col flex-1 min-h-0">
       {/* 2連続ミス警告 */}
       {consecutiveMisses >= 2 && (
         <div
           role="alert"
-          className="flex items-start gap-2 px-3 py-2.5 rounded-md bg-warning-50 border border-warning-300"
+          className="mb-3 flex items-start gap-2 px-3 py-2.5 rounded-md bg-warning-50 border border-warning-300"
         >
           <div>
             <p className="text-sm font-bold text-warning-700">連続ミス {consecutiveMisses}/3 — 失格注意</p>
@@ -102,87 +100,68 @@ export function ThrowRecorder({
         </div>
       )}
 
-      {/* モード切り替え */}
-      <div className="flex gap-1 p-1 bg-neutral-100 rounded-md">
-        <button
-          type="button"
-          onClick={() => setMode('score')}
-          disabled={isDisabled}
-          data-testid="mode-score"
-          className={[
-            'flex-1 py-1.5 text-sm font-medium rounded transition-colors',
-            mode === 'score'
-              ? 'bg-neutral-0 text-neutral-900 shadow-sm'
-              : 'text-neutral-500 hover:text-neutral-700',
-          ].join(' ')}
-        >
-          得点入力
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('fault')}
-          disabled={isDisabled}
-          data-testid="mode-fault"
-          className={[
-            'flex-1 py-1.5 text-sm font-medium rounded transition-colors',
-            mode === 'fault'
-              ? 'bg-neutral-0 text-neutral-900 shadow-sm'
-              : 'text-neutral-500 hover:text-neutral-700',
-          ].join(' ')}
-        >
-          フォルト
-        </button>
-      </div>
+      {/* 得点入力（常時表示） */}
+      <ScoreInputPanel
+        isFirstThrow={isFirstThrow}
+        onConfirm={handleScoreConfirm}
+        onMiss={handleMiss}
+        disabled={isDisabled}
+        isLoading={isPending}
+        onFaultOpen={() => setFaultOpen(true)}
+      />
 
-      {mode === 'score' ? (
-        <div className="flex flex-col min-h-0">
-          <ScoreInputPanel
-            isFirstThrow={isFirstThrow}
-            onConfirm={handleScoreConfirm}
-            onMiss={handleMiss}
-            disabled={isDisabled}
-            isLoading={isPending}
-          />
-          {error && (
-            <p role="alert" className="mt-2 text-sm text-danger-600">{error}</p>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(FAULT_LABELS) as FaultType[]).map((fault) => (
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-danger-600">{error}</p>
+      )}
+
+      {/* フォルト入力シート */}
+      {faultOpen && (
+        <div className="absolute inset-0 z-30 flex flex-col justify-end bg-neutral-900/40 rounded-lg">
+          <div className="bg-neutral-0 rounded-t-xl p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-neutral-800">フォルト種別を選択</span>
               <button
-                key={fault}
                 type="button"
-                onClick={() => setSelectedFault(fault)}
-                disabled={isDisabled}
-                className={[
-                  'px-3 py-2.5 rounded-md border text-sm font-medium transition-colors text-left',
-                  selectedFault === fault
-                    ? 'border-danger-500 bg-danger-50 text-danger-700'
-                    : 'border-neutral-300 bg-neutral-0 text-neutral-700 hover:border-neutral-400',
-                ].join(' ')}
-                aria-pressed={selectedFault === fault}
+                onClick={() => { setFaultOpen(false); setSelectedFault(null) }}
+                className="text-neutral-400 hover:text-neutral-600 text-lg leading-none"
+                aria-label="閉じる"
               >
-                {FAULT_LABELS[fault]}
+                ×
               </button>
-            ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(FAULT_LABELS) as FaultType[]).map((fault) => (
+                <button
+                  key={fault}
+                  type="button"
+                  onClick={() => setSelectedFault(fault)}
+                  disabled={isDisabled}
+                  className={[
+                    'px-3 py-2.5 rounded-md border text-sm font-medium transition-colors text-left',
+                    selectedFault === fault
+                      ? 'border-danger-500 bg-danger-50 text-danger-700'
+                      : 'border-neutral-300 bg-neutral-0 text-neutral-700 hover:border-neutral-400',
+                  ].join(' ')}
+                  aria-pressed={selectedFault === fault}
+                >
+                  {FAULT_LABELS[fault]}
+                </button>
+              ))}
+            </div>
+            {error && (
+              <p role="alert" className="text-sm text-danger-600">{error}</p>
+            )}
+            <Button
+              type="button"
+              variant="danger"
+              isLoading={isPending}
+              disabled={!selectedFault || isDisabled}
+              onClick={handleFaultSubmit}
+              data-testid="record-fault"
+            >
+              フォルトを記録
+            </Button>
           </div>
-
-          {error && (
-            <p role="alert" className="text-sm text-danger-600">{error}</p>
-          )}
-
-          <Button
-            type="button"
-            variant="danger"
-            isLoading={isPending}
-            disabled={!selectedFault || isDisabled}
-            onClick={handleFaultSubmit}
-            data-testid="record-fault"
-          >
-            フォルトを記録
-          </Button>
         </div>
       )}
     </div>

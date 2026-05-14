@@ -12,6 +12,8 @@ type ScoreInputPanelProps = {
   onConfirm: (skittlesKnocked: number[]) => void
   /** ミス（0点）確定時のコールバック */
   onMiss?: () => void
+  /** フォルト入力を開くコールバック */
+  onFaultOpen?: () => void
   disabled?: boolean
   isLoading?: boolean
 }
@@ -37,6 +39,7 @@ function ScoreInputPanelInner({
   isFirstThrow,
   onConfirm,
   onMiss,
+  onFaultOpen,
   disabled = false,
   isLoading = false,
 }: ScoreInputPanelProps) {
@@ -167,7 +170,7 @@ function ScoreInputPanelInner({
           aria-label="ミス（0点）を記録する"
           data-testid="miss-button"
         >
-          ミス（0点）
+          ミス
         </Button>
         <Button
           variant="primary"
@@ -181,6 +184,18 @@ function ScoreInputPanelInner({
         >
           {selected === null ? '確定' : `${previewScore}点で確定`}
         </Button>
+        {onFaultOpen && (
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={onFaultOpen}
+            disabled={disabled || isLoading}
+            data-testid="fault-open"
+            aria-label="フォルトを記録する"
+          >
+            F
+          </Button>
+        )}
       </div>
     </div>
   )
