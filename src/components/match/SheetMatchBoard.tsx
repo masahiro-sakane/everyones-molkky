@@ -95,22 +95,24 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
         currentRound={matchState.currentRound}
       />
 
+      {/* 投擲者バー（全幅） */}
+      {currentThrower && (
+        <CurrentThrower
+          teamName={match.matchType === 'SOLO' ? '' : currentThrower.teamName}
+          throwerName={currentThrower.userName}
+          teamOrder={currentThrower.teamOrder}
+          totalTeams={currentThrower.totalTeams}
+          nextTeamName={match.matchType === 'SOLO' ? undefined : nextThrower?.teamName}
+          nextThrowerName={nextThrower?.userName}
+        />
+      )}
+
       {/* スコアシート + 入力パネル
           - lg以上: 横並び（シート左・入力右sticky）
           - lg未満: 入力パネルを上、シートを下（入力欄が常に画面上部に見える） */}
       <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_360px] gap-4">
         {/* スコアシート */}
         <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2">
-          {currentThrower && (
-            <CurrentThrower
-              teamName={match.matchType === 'SOLO' ? '' : currentThrower.teamName}
-              throwerName={currentThrower.userName}
-              teamOrder={currentThrower.teamOrder}
-              totalTeams={currentThrower.totalTeams}
-              nextTeamName={match.matchType === 'SOLO' ? undefined : nextThrower?.teamName}
-              nextThrowerName={nextThrower?.userName}
-            />
-          )}
           <ScoreSheetView data={sheet} />
           <div className="flex items-center justify-end gap-2 pt-1">
             <ShareButton shareCode={match.shareCode} />
@@ -122,15 +124,8 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
         {!watchMode && currentThrower && (
           <aside
             aria-label="投擲記録"
-            className="lg:sticky lg:top-20 lg:self-start flex flex-col gap-2"
+            className="lg:sticky lg:top-20 lg:self-start"
           >
-            {/* CurrentThrower と高さを揃えるスペーサー（lg以上のみ表示） */}
-            <div
-              aria-hidden="true"
-              className="hidden lg:flex invisible bg-brand-50 border border-brand-200 rounded-lg px-3 py-1.5 items-center"
-            >
-              &nbsp;
-            </div>
             <div className="bg-neutral-0 border border-neutral-300 rounded-lg p-4">
               <ThrowRecorder
                 shareCode={match.shareCode}
