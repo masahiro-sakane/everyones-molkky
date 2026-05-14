@@ -189,13 +189,18 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
 
         {/* スコアシート */}
         <section aria-label="スコアシート" className="min-w-0 flex flex-col gap-2 lg:order-1 order-2">
-          <div>
-            <ScoreSheetView
-              data={sheet}
-              onEditCell={!watchMode && !isFinished ? (throwId, skittles, rect) => setEditTarget({ throwId, currentSkittles: skittles, anchorRect: rect }) : undefined}
-              editingThrowId={editTarget?.throwId}
-            />
-          </div>
+          <ScoreSheetView
+            data={sheet}
+            onEditCell={!watchMode && !isFinished ? (throwId, skittles, rect) => setEditTarget({ throwId, currentSkittles: skittles, anchorRect: rect }) : undefined}
+            editingThrowId={editTarget?.throwId}
+            rankingActions={
+              <>
+                {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
+                <ShareButton shareCode={match.shareCode} />
+                <ConnectionStatus status={connStatus} />
+              </>
+            }
+          />
           {editTarget && (
             <ScoreCellEditPopover
               target={editTarget}
@@ -204,11 +209,6 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
               onCancel={() => setEditTarget(null)}
             />
           )}
-          <div className="flex items-center justify-end gap-2 pt-1">
-            {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
-            <ShareButton shareCode={match.shareCode} />
-            <ConnectionStatus status={connStatus} />
-          </div>
         </section>
       </div>
     </div>

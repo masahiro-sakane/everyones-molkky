@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import type { ScoreSheetData } from '@/types/scoreSheet'
 import { ScoreSheetTeamHeader } from './ScoreSheetTeamHeader'
 import { ScoreSheetRow } from './ScoreSheetRow'
@@ -15,6 +15,8 @@ type ScoreSheetViewProps = {
   onEditCell?: (throwId: string, skittles: number[], rect: DOMRect) => void
   /** 編集中の throwId（ハイライト用） */
   editingThrowId?: string | null
+  /** 順位行の右端に追加するアクション群 */
+  rankingActions?: ReactNode
 }
 
 const RANK_LABELS = ['1位', '2位', '3位', '4位', '5位', '6位', '7位', '8位']
@@ -28,6 +30,7 @@ export function ScoreSheetView({
   matchDate,
   onEditCell,
   editingThrowId,
+  rankingActions,
 }: ScoreSheetViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -101,7 +104,7 @@ export function ScoreSheetView({
       {/* 順位フッター */}
       {data.rankings.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-md flex-wrap">
-          <span className="text-xs text-neutral-500 font-medium">最終順位:</span>
+          <span className="text-xs text-neutral-500 font-medium shrink-0">最終順位:</span>
           {data.rankings.map((r) => (
             <div
               key={r.teamId}
@@ -129,6 +132,11 @@ export function ScoreSheetView({
               <span className="text-neutral-500 tabular-nums">({r.totalScore})</span>
             </div>
           ))}
+          {rankingActions && (
+            <div className="ml-auto flex items-center gap-2 shrink-0">
+              {rankingActions}
+            </div>
+          )}
         </div>
       )}
     </div>
