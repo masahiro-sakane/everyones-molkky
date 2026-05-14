@@ -431,6 +431,49 @@ describe('useScoreSheet', () => {
   })
 
 
+  describe('行数（minRows）', () => {
+    const twoTeams = [
+      { id: 'a', name: 'A', members: [{ id: 'u1', name: '太郎' }] },
+      { id: 'b', name: 'B', members: [{ id: 'u2', name: '花子' }] },
+    ]
+
+    it('制限なしのとき最低12行表示される', () => {
+      const match = buildMatch({ teams: twoTeams, throws: [] })
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(12)
+    })
+
+    it('ターン制限5のとき最低5行表示される', () => {
+      const match = {
+        ...buildMatch({ teams: twoTeams, throws: [] }),
+        limitType: 'TURNS' as const,
+        turnLimit: 5,
+      }
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(5)
+    })
+
+    it('ターン制限20のとき最低20行表示される', () => {
+      const match = {
+        ...buildMatch({ teams: twoTeams, throws: [] }),
+        limitType: 'TURNS' as const,
+        turnLimit: 20,
+      }
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(20)
+    })
+
+    it('時間制限のときは12行（turnLimitを使わない）', () => {
+      const match = {
+        ...buildMatch({ teams: twoTeams, throws: [] }),
+        limitType: 'TIME' as const,
+        timeLimitMinutes: 20,
+      }
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(12)
+    })
+  })
+
   describe('3チーム×3名ローテーション', () => {
     it('各投擲が正しいメンバー列に入る', () => {
       // 実際のDBと同じ状況: memberOrder が定義順と逆
@@ -583,6 +626,67 @@ describe('useScoreSheet', () => {
       expect(r2[0].value).toEqual({ kind: 'empty' })
       expect(r2[1].value).toEqual({ kind: 'empty' })
       expect(r2[2].value).toEqual({ kind: 'score', n: 8 }) // 田中
+    })
+  })
+
+  describe('行数（minRows）', () => {
+    const twoTeams = [
+      { id: 'a', name: 'A', members: [{ id: 'u1', name: '太郎' }] },
+      { id: 'b', name: 'B', members: [{ id: 'u2', name: '花子' }] },
+    ]
+
+    it('limitType=NONEのとき投擲なしでデフォルト12行', () => {
+      const match = buildMatch({ teams: twoTeams, throws: [] })
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(12)
+    })
+
+    it('limitType=TURNSでturnLimit=5のとき5行表示', () => {
+      const match: MatchData = {
+        ...buildMatch({ teams: twoTeams, throws: [] }),
+        limitType: 'TURNS',
+        turnLimit: 5,
+      }
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(5)
+    })
+
+    it('limitType=TURNSでturnLimit=20のとき20行表示', () => {
+      const match: MatchData = {
+        ...buildMatch({ teams: twoTeams, throws: [] }),
+        limitType: 'TURNS',
+        turnLimit: 20,
+      }
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(20)
+    })
+
+    it('limitType=TURNSで実際の投擲行がturnLimitを超えた場合は実績行数を返す', () => {
+      const throws = Array.from({ length: 8 }, (_, i) => ({
+        id: `t${i}`,
+        teamId: i % 2 === 0 ? 'a' : 'b',
+        userId: i % 2 === 0 ? 'u1' : 'u2',
+        throwOrder: 1,
+        skittlesKnocked: [1],
+        score: 1,
+      }))
+      const match: MatchData = {
+        ...buildMatch({ teams: twoTeams, throws }),
+        limitType: 'TURNS',
+        turnLimit: 3, // 3行設定だが8投（4ラウンド）あり
+      }
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows.length).toBeGreaterThanOrEqual(4)
+    })
+
+    it('limitType=TIMEのときデフォルト12行', () => {
+      const match: MatchData = {
+        ...buildMatch({ teams: twoTeams, throws: [] }),
+        limitType: 'TIME',
+        timeLimitMinutes: 20,
+      }
+      const { result } = renderHook(() => useScoreSheet(match))
+      expect(result.current.rows).toHaveLength(12)
     })
   })
 })

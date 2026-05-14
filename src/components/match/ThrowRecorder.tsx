@@ -13,6 +13,7 @@ type ThrowRecorderProps = {
   currentUserId: string
   isFirstThrow?: boolean
   disabled?: boolean
+  consecutiveMisses?: number
   onOptimisticThrow: (pending: PendingThrow) => Promise<void>
   isPending?: boolean
 }
@@ -29,6 +30,7 @@ export function ThrowRecorder({
   currentUserId,
   isFirstThrow = false,
   disabled = false,
+  consecutiveMisses = 0,
   onOptimisticThrow,
   isPending = false,
 }: ThrowRecorderProps) {
@@ -84,6 +86,19 @@ export function ThrowRecorder({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 2連続ミス警告 */}
+      {consecutiveMisses >= 2 && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 px-3 py-2.5 rounded-md bg-warning-50 border border-warning-300"
+        >
+          <div>
+            <p className="text-sm font-bold text-warning-700">連続ミス {consecutiveMisses}/3 — 失格注意</p>
+            <p className="text-xs text-warning-600 mt-0.5">次にミスすると失格になります</p>
+          </div>
+        </div>
+      )}
+
       {/* モード切り替え */}
       <div className="flex gap-1 p-1 bg-neutral-100 rounded-md">
         <button

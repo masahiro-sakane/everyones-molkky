@@ -17,7 +17,7 @@ export default async function PlayersPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto">
+      <div>
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-bold text-neutral-900">プレイヤー一覧</h1>
           <Button variant="primary" size="md" data-testid="add-player-button">
@@ -25,9 +25,16 @@ export default async function PlayersPage() {
           </Button>
         </div>
 
-        <div className="bg-neutral-0 border border-neutral-300 rounded-lg shadow-sm px-6 py-5">
+        {players.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-neutral-500 mb-4">まだプレイヤーがいません。</p>
+            <Link href="/players/new">
+              <Button variant="primary">プレイヤーを追加</Button>
+            </Link>
+          </div>
+        ) : (
           <PlayerList players={players} />
-        </div>
+        )}
       </div>
     </AppLayout>
   )

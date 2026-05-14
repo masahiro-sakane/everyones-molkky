@@ -163,6 +163,7 @@ export function SheetMatchBoard({ match, watchMode = false }: SheetMatchBoardPro
                 currentTeamId={currentThrower.teamId}
                 currentUserId={currentThrower.userId}
                 isFirstThrow={sheet.isFirstThrow}
+                consecutiveMisses={matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)?.consecutiveMisses ?? 0}
                 onOptimisticThrow={handleOptimisticThrow}
                 isPending={isPending}
               />

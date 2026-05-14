@@ -178,6 +178,7 @@ export function MatchBoard({ match, watchMode = false }: MatchBoardProps) {
               shareCode={match.shareCode}
               currentTeamId={currentThrower.teamId}
               currentUserId={currentThrower.userId}
+              consecutiveMisses={teamScores.find((t) => t.teamId === currentThrower.teamId)?.consecutiveMisses ?? 0}
               onOptimisticThrow={async (pending) => {
                 const res = await fetch(`/api/matches/${match.shareCode}/throws`, {
                   method: 'POST',

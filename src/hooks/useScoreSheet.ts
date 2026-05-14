@@ -203,11 +203,15 @@ export function useScoreSheet(match: MatchData): ScoreSheetData {
       }
     }
 
-    // 行数: 実際の最大行 or 最低12行
+    // 行数: 実際の最大行 or 最低行数
+    // ターン制限がある場合はそのラウンド数を最低行数にする
     const maxRow = turnThrows.length > 0
       ? Math.max(...turnThrows.map((t) => t.rowIndex)) + 1
       : 0
-    const minRows = Math.max(memberCount, 12)
+    const defaultMinRows = match.limitType === 'TURNS' && match.turnLimit !== null
+      ? match.turnLimit
+      : 12
+    const minRows = Math.max(memberCount, defaultMinRows)
     const totalRows = Math.max(maxRow, minRows)
 
     // turnThrowsをrowIndex+teamIdで引けるMapに変換
