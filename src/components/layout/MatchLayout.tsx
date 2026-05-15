@@ -94,7 +94,7 @@ export function MatchLayout({ children }: MatchLayoutProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-100">
-      <main className="flex-1 w-full max-w-lg md:max-w-7xl mx-auto px-2 py-2 pb-20">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-2 py-2 pb-20">
         {children}
       </main>
 
