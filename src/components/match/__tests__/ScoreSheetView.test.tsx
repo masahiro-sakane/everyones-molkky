@@ -88,7 +88,7 @@ describe('ScoreSheetView', () => {
     expect(screen.getByText('次郎')).toBeInTheDocument()
   })
 
-  it('順位フッターが表示される', () => {
+  it('合計行が表示される', () => {
     const data = buildEmptyData({
       teams: [
         { id: 'a', name: 'A', members: ['x'] },
@@ -96,8 +96,8 @@ describe('ScoreSheetView', () => {
       ],
     })
     render(<ScoreSheetView data={data} />)
-    expect(screen.getByTestId('rank-1')).toBeInTheDocument()
-    expect(screen.getByTestId('rank-2')).toBeInTheDocument()
+    expect(screen.getByTestId('grand-total-a')).toBeInTheDocument()
+    expect(screen.getByTestId('grand-total-b')).toBeInTheDocument()
   })
 
   it('合計セルにチーム別合計が表示される', () => {

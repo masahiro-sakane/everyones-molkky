@@ -5,7 +5,7 @@ import type { z } from 'zod'
 export type CreateMatchInput = z.infer<typeof createMatchSchema>
 export type CreateSoloMatchInput = z.infer<typeof createSoloMatchSchema>
 
-export async function createMatch(input: CreateMatchInput) {
+export async function createMatch(input: CreateMatchInput, createdByUserId?: string) {
   const validated = createMatchSchema.parse(input)
 
   return db.$transaction(async (tx) => {
@@ -20,6 +20,7 @@ export async function createMatch(input: CreateMatchInput) {
         turnLimit: limitType === 'TURNS' ? (validated.turnLimit ?? 12) : null,
         timeLimitMinutes: limitType === 'TIME' ? (validated.timeLimitMinutes ?? 20) : null,
         totalSets: validated.totalSets ?? 1,
+        ...(createdByUserId ? { createdByUserId } : {}),
       },
     })
 

@@ -15,36 +15,31 @@ describe('ThrowRecorder', () => {
     vi.clearAllMocks()
   })
 
-  it('得点入力モードとフォルトモードのタブが表示される', () => {
-    render(<ThrowRecorder {...defaultProps} />)
-    expect(screen.getByTestId('mode-score')).toBeInTheDocument()
-    expect(screen.getByTestId('mode-fault')).toBeInTheDocument()
-  })
-
-  it('初期状態は得点入力モード（ScoreInputPanel）', () => {
+  it('初期状態は得点入力パネルが表示される', () => {
     render(<ThrowRecorder {...defaultProps} />)
     expect(screen.getByRole('group', { name: 'スコア入力' })).toBeInTheDocument()
   })
 
-  it('初期モードは常に複数本モード', () => {
+  it('初期モードは複数本モード', () => {
     render(<ThrowRecorder {...defaultProps} />)
     expect(screen.getByTestId('mode-multi')).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('フォルトタブに切り替えるとフォルト選択ボタンが表示される', async () => {
+  it('「F」ボタンをクリックするとフォルト入力シートが開く', async () => {
     const user = userEvent.setup()
     render(<ThrowRecorder {...defaultProps} />)
-    await user.click(screen.getByTestId('mode-fault'))
+    await user.click(screen.getByTestId('fault-open'))
+    expect(screen.getByText('フォルト種別を選択')).toBeInTheDocument()
     expect(screen.getByText('ミス（0本）')).toBeInTheDocument()
     expect(screen.getByText('ドロップ')).toBeInTheDocument()
     expect(screen.getByText('踏み越え')).toBeInTheDocument()
     expect(screen.getByText('順番違い')).toBeInTheDocument()
   })
 
-  it('フォルトモードでフォルトを選択するとボタンがハイライトされる', async () => {
+  it('フォルトシートでフォルトを選択するとボタンがハイライトされる', async () => {
     const user = userEvent.setup()
     render(<ThrowRecorder {...defaultProps} />)
-    await user.click(screen.getByTestId('mode-fault'))
+    await user.click(screen.getByTestId('fault-open'))
 
     const missBtn = screen.getByText('ミス（0本）').closest('button')!
     await user.click(missBtn)
@@ -52,19 +47,13 @@ describe('ThrowRecorder', () => {
     expect(missBtn).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('フォルトモードで未選択時は「フォルトを記録」ボタンが無効', async () => {
+  it('フォルトシートで未選択時は「フォルトを記録」ボタンが無効', async () => {
     const user = userEvent.setup()
     render(<ThrowRecorder {...defaultProps} />)
-    await user.click(screen.getByTestId('mode-fault'))
+    await user.click(screen.getByTestId('fault-open'))
 
-    const submitBtn = screen.getByText('フォルトを記録').closest('button')!
+    const submitBtn = screen.getByTestId('record-fault')
     expect(submitBtn).toBeDisabled()
-  })
-
-  it('disabled=trueの場合は得点/フォルトタブが無効になる', () => {
-    render(<ThrowRecorder {...defaultProps} disabled />)
-    expect(screen.getByTestId('mode-score')).toBeDisabled()
-    expect(screen.getByTestId('mode-fault')).toBeDisabled()
   })
 
   it('consecutiveMisses=2のとき連続ミス警告バナーが表示される', () => {

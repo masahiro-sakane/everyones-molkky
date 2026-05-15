@@ -3,24 +3,28 @@ import { render, screen } from '@testing-library/react'
 import { ConnectionStatus } from '../ConnectionStatus'
 
 describe('ConnectionStatus', () => {
-  it('connecting ステータスを表示する', () => {
+  it('connecting ステータスで aria-label が付く', () => {
     render(<ConnectionStatus status="connecting" />)
-    expect(screen.getByText('接続中...')).toBeInTheDocument()
+    const el = screen.getByRole('status')
+    expect(el).toHaveAttribute('aria-label', '接続中...')
   })
 
-  it('connected ステータスを表示する', () => {
+  it('connected ステータスで aria-label が付く', () => {
     render(<ConnectionStatus status="connected" />)
-    expect(screen.getByText('リアルタイム同期中')).toBeInTheDocument()
+    const el = screen.getByRole('status')
+    expect(el).toHaveAttribute('aria-label', 'リアルタイム同期中')
   })
 
-  it('reconnecting ステータスを表示する', () => {
+  it('reconnecting ステータスで aria-label が付く', () => {
     render(<ConnectionStatus status="reconnecting" />)
-    expect(screen.getByText('再接続中...')).toBeInTheDocument()
+    const el = screen.getByRole('status')
+    expect(el).toHaveAttribute('aria-label', '再接続中...')
   })
 
-  it('disconnected ステータスを表示する', () => {
+  it('disconnected ステータスで aria-label が付く', () => {
     render(<ConnectionStatus status="disconnected" />)
-    expect(screen.getByText('切断中（5秒ごとに更新）')).toBeInTheDocument()
+    const el = screen.getByRole('status')
+    expect(el).toHaveAttribute('aria-label', '切断中（5秒ごとに更新）')
   })
 
   it('role="status" と aria-live="polite" が付く', () => {

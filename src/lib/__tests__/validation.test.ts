@@ -23,8 +23,8 @@ describe('createUserSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('無効なURLのavatarUrlはエラーになる', () => {
-    const result = createUserSchema.safeParse({ name: '田中', avatarUrl: 'not-a-url' })
+  it('無効なURLのimageはエラーになる', () => {
+    const result = createUserSchema.safeParse({ name: '田中', image: 'not-a-url' })
     expect(result.success).toBe(false)
   })
 })

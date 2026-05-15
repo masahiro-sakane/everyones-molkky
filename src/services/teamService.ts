@@ -5,10 +5,13 @@ import type { z } from 'zod'
 export type CreateTeamInput = z.infer<typeof createTeamSchema>
 export type AddTeamMemberInput = z.infer<typeof addTeamMemberSchema>
 
-export async function createTeam(input: CreateTeamInput) {
+export async function createTeam(input: CreateTeamInput, createdByUserId?: string) {
   const validated = createTeamSchema.parse(input)
   return db.team.create({
-    data: { name: validated.name },
+    data: {
+      name: validated.name,
+      ...(createdByUserId ? { createdByUserId } : {}),
+    },
     include: { members: { include: { user: true } } },
   })
 }

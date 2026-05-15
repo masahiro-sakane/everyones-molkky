@@ -91,12 +91,12 @@ describe('ScoreInputPanel', () => {
   })
 
   describe('モード切替', () => {
-    it('モードを切り替えると選択がクリアされる', async () => {
+    it('モードを切り替えても選択が維持される', async () => {
       render(<ScoreInputPanel isFirstThrow={false} onConfirm={vi.fn()} />)
       await userEvent.click(screen.getByTestId('mode-single'))
       await userEvent.click(screen.getByTestId('score-7'))
       await userEvent.click(screen.getByTestId('mode-multi'))
-      expect(screen.getByTestId('score-7')).toHaveAttribute('aria-checked', 'false')
+      expect(screen.getByTestId('score-7')).toHaveAttribute('aria-checked', 'true')
     })
   })
 

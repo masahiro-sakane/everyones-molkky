@@ -10,7 +10,7 @@ export async function createUser(input: CreateUserInput) {
   return db.user.create({
     data: {
       name: validated.name,
-      avatarUrl: validated.avatarUrl ?? null,
+      image: validated.image ?? null,
     },
   })
 }

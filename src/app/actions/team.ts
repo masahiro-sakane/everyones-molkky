@@ -47,7 +47,7 @@ export async function createUserAndAddMemberAction(
 ): Promise<ActionState> {
   const raw = {
     name: formData.get('name'),
-    avatarUrl: formData.get('avatarUrl') || undefined,
+    image: formData.get('image') || undefined,
   }
 
   const userParsed = createUserSchema.safeParse(raw)

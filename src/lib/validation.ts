@@ -3,7 +3,7 @@ import { z } from 'zod'
 // ユーザー作成
 export const createUserSchema = z.object({
   name: z.string().min(1, '名前は1文字以上で入力してください').max(50, '名前は50文字以内で入力してください'),
-  avatarUrl: z.string().url('有効なURLを入力してください').optional(),
+  image: z.string().url('有効なURLを入力してください').optional(),
 })
 
 // ユーザー更新

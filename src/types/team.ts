@@ -20,7 +20,7 @@ export type TeamWithMembers = Team & {
     user: {
       id: string
       name: string
-      avatarUrl: string | null
+      image: string | null
     }
   })[]
 }

@@ -11,12 +11,12 @@ export function createTestDb() {
 
 export async function createTestUser(
   db: PrismaClient,
-  overrides?: Partial<{ name: string; avatarUrl: string }>
+  overrides?: Partial<{ name: string; image: string }>
 ) {
   return db.user.create({
     data: {
       name: overrides?.name ?? `テストユーザー_${Date.now()}`,
-      avatarUrl: overrides?.avatarUrl ?? null,
+      image: overrides?.image ?? null,
     },
   })
 }

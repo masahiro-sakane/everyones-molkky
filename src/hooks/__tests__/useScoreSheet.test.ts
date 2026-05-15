@@ -178,7 +178,7 @@ describe('useScoreSheet', () => {
       const { result } = renderHook(() => useScoreSheet(match))
       const row1 = result.current.rows[0]
       const aCells = row1.cellsByTeam.get('a')!
-      expect(aCells[0].value).toEqual({ kind: 'score', n: 7 })
+      expect(aCells[0].value).toEqual({ kind: 'score', n: 7, isSingle: true })
     })
 
     it('0点はミスセルになる', () => {
@@ -516,17 +516,17 @@ describe('useScoreSheet', () => {
       const r0aCells = rows[0].cellsByTeam.get('a')!
       expect(r0aCells[0].value).toEqual({ kind: 'empty' })
       expect(r0aCells[1].value).toEqual({ kind: 'empty' })
-      expect(r0aCells[2].value).toEqual({ kind: 'score', n: 12 }) // 佐藤の列
+      expect(r0aCells[2].value).toEqual({ kind: 'score', n: 12, isSingle: true }) // 佐藤の列
 
       // 行1: 鈴木(u2)が投げた → 列1にスコア
       const r1aCells = rows[1].cellsByTeam.get('a')!
       expect(r1aCells[0].value).toEqual({ kind: 'empty' })
-      expect(r1aCells[1].value).toEqual({ kind: 'score', n: 10 }) // 鈴木の列
+      expect(r1aCells[1].value).toEqual({ kind: 'score', n: 10, isSingle: true }) // 鈴木の列
       expect(r1aCells[2].value).toEqual({ kind: 'empty' })
 
       // 行2: 田中(u1)が投げた → 列0にスコア
       const r2aCells = rows[2].cellsByTeam.get('a')!
-      expect(r2aCells[0].value).toEqual({ kind: 'score', n: 8 }) // 田中の列
+      expect(r2aCells[0].value).toEqual({ kind: 'score', n: 8, isSingle: true }) // 田中の列
       expect(r2aCells[1].value).toEqual({ kind: 'empty' })
       expect(r2aCells[2].value).toEqual({ kind: 'empty' })
     })
@@ -611,21 +611,21 @@ describe('useScoreSheet', () => {
       // memberOrder=[u3,u2,u1] → 列0=佐藤(u3), 列1=鈴木(u2), 列2=田中(u1)
       // 行0: 佐藤(u3)が投げた → 列0にスコア
       const r0 = rows[0].cellsByTeam.get('a')!
-      expect(r0[0].value).toEqual({ kind: 'score', n: 12 }) // 佐藤
+      expect(r0[0].value).toEqual({ kind: 'score', n: 12, isSingle: true }) // 佐藤 (逆順)
       expect(r0[1].value).toEqual({ kind: 'empty' })
       expect(r0[2].value).toEqual({ kind: 'empty' })
 
       // 行1: 鈴木(u2)が投げた → 列1にスコア
       const r1 = rows[1].cellsByTeam.get('a')!
       expect(r1[0].value).toEqual({ kind: 'empty' })
-      expect(r1[1].value).toEqual({ kind: 'score', n: 10 }) // 鈴木
+      expect(r1[1].value).toEqual({ kind: 'score', n: 10, isSingle: true }) // 鈴木
       expect(r1[2].value).toEqual({ kind: 'empty' })
 
       // 行2: 田中(u1)が投げた → 列2にスコア
       const r2 = rows[2].cellsByTeam.get('a')!
       expect(r2[0].value).toEqual({ kind: 'empty' })
       expect(r2[1].value).toEqual({ kind: 'empty' })
-      expect(r2[2].value).toEqual({ kind: 'score', n: 8 }) // 田中
+      expect(r2[2].value).toEqual({ kind: 'score', n: 8, isSingle: true }) // 田中
     })
   })
 
