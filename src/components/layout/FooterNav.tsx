@@ -56,6 +56,11 @@ const navItems = [
 const BOTTOM_THRESHOLD = 80
 const HIDE_DELAY = 2500
 
+// /matches/[shareCode] の試合画面（new・replay・watch以外）
+function isMatchPlayPage(pathname: string) {
+  return /^\/matches\/[^/]+$/.test(pathname)
+}
+
 type FooterNavProps = {
   user?: { name?: string | null; image?: string | null } | null
   onSignOut: () => Promise<void>
@@ -63,7 +68,9 @@ type FooterNavProps = {
 
 export function FooterNav({ user, onSignOut }: FooterNavProps) {
   const pathname = usePathname()
-  const [isVisible, setIsVisible] = useState(false)
+  const autoHide = isMatchPlayPage(pathname)
+
+  const [isVisible, setIsVisible] = useState(!autoHide)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const show = useCallback(() => {
@@ -72,7 +79,15 @@ export function FooterNav({ user, onSignOut }: FooterNavProps) {
     hideTimerRef.current = setTimeout(() => setIsVisible(false), HIDE_DELAY)
   }, [])
 
+  // autoHide が切り替わったとき（ページ遷移）に表示状態をリセット
   useEffect(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+    setIsVisible(!autoHide)
+  }, [autoHide])
+
+  useEffect(() => {
+    if (!autoHide) return
+
     const handleScroll = () => {
       const distanceFromBottom =
         document.documentElement.scrollHeight - window.scrollY - window.innerHeight
@@ -95,7 +110,7 @@ export function FooterNav({ user, onSignOut }: FooterNavProps) {
       window.removeEventListener('touchstart', handlePointerMove)
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
     }
-  }, [show])
+  }, [autoHide, show])
 
   return (
     <nav
