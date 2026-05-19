@@ -14,12 +14,10 @@ function calcCombinations(remaining: number): [number, number][] {
   const results: [number, number][] = []
   for (let a = 1; a <= 12; a++) {
     const b = remaining - a
-    if (b >= 1 && b <= 12) {
+    if (b >= 1 && b <= 12 && a <= b) {
       results.push([a, b])
     }
   }
-  // 今回の得点が大きい順
-  results.sort((x, y) => y[0] - x[0])
   return results
 }
 
