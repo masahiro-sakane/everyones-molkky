@@ -9,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // マイグレーションはDirect Connection（DIRECT_URL）を優先
+    // Supabaseの場合、Transaction Pooler（port 6543）はマイグレーション非対応
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });
