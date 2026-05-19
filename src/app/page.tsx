@@ -21,8 +21,8 @@ export default async function HomePage() {
 
   return (
     <AppLayout>
-
-      <div className={`grid grid-cols-1 ${activeMatches.length > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 max-w-4xl mx-auto`}>
+      <div className="min-h-[calc(100svh-8rem)] flex items-center justify-center py-4">
+      <div className={`w-full grid grid-cols-1 ${activeMatches.length > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 max-w-4xl mx-auto`}>
         {/* 進行中の試合 */}
         {activeMatches.length > 0 && (
           <section className="bg-brand-50 border border-brand-200 rounded-lg p-4">
@@ -121,6 +121,7 @@ export default async function HomePage() {
             </Link>
           </div>
         </section>
+      </div>
       </div>
     </AppLayout>
   )
