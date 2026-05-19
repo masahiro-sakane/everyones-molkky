@@ -13,7 +13,7 @@ type Team = {
 
 type Player = {
   id: string
-  name: string
+  name: string | null
   teamMembers: { team: Team }[]
 }
 
@@ -53,9 +53,9 @@ export function PlayerList({ players }: PlayerListProps) {
                   className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-sm font-medium shrink-0"
                   aria-hidden="true"
                 >
-                  {player.name.charAt(0)}
+                  {(player.name ?? '?').charAt(0)}
                 </div>
-                <p className="text-sm font-semibold text-neutral-800 truncate">{player.name}</p>
+                <p className="text-sm font-semibold text-neutral-800 truncate">{player.name ?? '名前未設定'}</p>
               </div>
 
               <div className="px-4 py-3 flex-1">
@@ -78,7 +78,7 @@ export function PlayerList({ players }: PlayerListProps) {
                     variant="subtle"
                     size="sm"
                     disabled={isPending}
-                    aria-label={`${player.name}を編集`}
+                    aria-label={`${player.name ?? '名前未設定'}を編集`}
                     data-testid={`edit-player-${player.id}`}
                     className="w-full"
                   >
@@ -91,7 +91,7 @@ export function PlayerList({ players }: PlayerListProps) {
                   onClick={() => handleDelete(player.id)}
                   disabled={isPending}
                   isLoading={isDeleting}
-                  aria-label={`${player.name}を削除`}
+                  aria-label={`${player.name ?? '名前未設定'}を削除`}
                   data-testid={`delete-player-${player.id}`}
                   className="flex-1"
                 >

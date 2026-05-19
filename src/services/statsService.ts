@@ -128,7 +128,7 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
   if (throwCount === 0) {
     return {
       userId,
-      userName: user.name,
+      userName: user.name ?? '名前未設定',
       throwCount: 0,
       avgScore: 0,
       missRate: 0,
@@ -147,7 +147,7 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
 
   return {
     userId,
-    userName: user.name,
+    userName: user.name ?? '名前未設定',
     throwCount,
     avgScore: Math.round((totalScore / throwCount) * 10) / 10,
     missRate: Math.round((missCount / throwCount) * 100),

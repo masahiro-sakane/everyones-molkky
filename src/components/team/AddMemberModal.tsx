@@ -14,7 +14,7 @@ import {
 
 type User = {
   id: string
-  name: string
+  name: string | null
 }
 
 type AddMemberModalProps = {
@@ -90,7 +90,7 @@ function ExistingUserForm({
           isRequired
           error={state.errors?.userId?.[0]}
           disabled={isPending}
-          options={availableUsers.map((u) => ({ label: u.name, value: u.id }))}
+          options={availableUsers.map((u) => ({ label: u.name ?? '名前未設定', value: u.id }))}
         />
       )}
 

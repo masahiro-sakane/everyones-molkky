@@ -36,7 +36,7 @@ export default async function EditPlayerPage({ params }: PageProps) {
         <h1 className="text-xl font-bold text-neutral-900 mb-6">プレイヤーを編集</h1>
 
         <div className="bg-neutral-0 border border-neutral-300 rounded-lg shadow-sm px-6 py-5">
-          <EditPlayerForm playerId={player.id} defaultName={player.name} />
+          <EditPlayerForm playerId={player.id} defaultName={player.name ?? ''} />
         </div>
       </div>
     </AppLayout>

@@ -1,6 +1,6 @@
 export type User = {
   id: string
-  name: string
+  name: string | null
   image: string | null
   createdAt: Date
   updatedAt: Date

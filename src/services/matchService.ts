@@ -103,7 +103,7 @@ export async function createSoloMatch(input: CreateSoloMatchInput) {
       const player = players.find((p) => p.id === playerId)!
       const soloTeam = await tx.team.create({
         data: {
-          name: player.name,
+          name: player.name ?? '名前未設定',
           isSolo: true,
           members: {
             create: { userId: playerId, role: 'captain' },

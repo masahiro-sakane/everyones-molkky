@@ -11,13 +11,13 @@ type Member = {
   role: string
   user: {
     id: string
-    name: string
+    name: string | null
   }
 }
 
 type User = {
   id: string
-  name: string
+  name: string | null
 }
 
 type MemberListProps = {
@@ -71,9 +71,9 @@ export function MemberList({ teamId, members, allUsers }: MemberListProps) {
                   className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-sm font-medium"
                   aria-hidden="true"
                 >
-                  {member.user.name.charAt(0)}
+                  {(member.user.name ?? '?').charAt(0)}
                 </div>
-                <span className="text-sm font-medium text-neutral-800">{member.user.name}</span>
+                <span className="text-sm font-medium text-neutral-800">{member.user.name ?? '名前未設定'}</span>
                 {member.role === 'captain' && (
                   <Badge variant="primary">
                     キャプテン
@@ -85,7 +85,7 @@ export function MemberList({ teamId, members, allUsers }: MemberListProps) {
                 size="sm"
                 onClick={() => handleRemove(member.userId)}
                 disabled={isPending}
-                aria-label={`${member.user.name}をメンバーから削除`}
+                aria-label={`${member.user.name ?? '名前未設定'}をメンバーから削除`}
               >
                 削除
               </Button>

@@ -19,7 +19,7 @@ export type TeamWithMembers = Team & {
   members: (TeamMember & {
     user: {
       id: string
-      name: string
+      name: string | null
       image: string | null
     }
   })[]

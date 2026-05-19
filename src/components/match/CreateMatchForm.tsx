@@ -7,7 +7,7 @@ import { createMatchAction, type MatchActionState } from '@/app/actions/match'
 
 type TeamMember = {
   userId: string
-  user: { id: string; name: string }
+  user: { id: string; name: string | null }
 }
 
 type Team = {
@@ -18,7 +18,7 @@ type Team = {
 
 type User = {
   id: string
-  name: string
+  name: string | null
 }
 
 type LimitType = 'NONE' | 'TURNS' | 'TIME'
