@@ -58,7 +58,7 @@ const HIDE_DELAY = 2500
 
 type FooterNavProps = {
   user?: { name?: string | null; image?: string | null } | null
-  onSignOut: () => void
+  onSignOut: () => Promise<void>
 }
 
 export function FooterNav({ user, onSignOut }: FooterNavProps) {
