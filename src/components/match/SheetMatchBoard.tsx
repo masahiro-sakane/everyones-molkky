@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { useScoreSheet } from '@/hooks/useScoreSheet'
 import { useRealtimeScore, type RealtimeScoreEvent } from '@/hooks/useRealtimeScore'
@@ -38,7 +37,6 @@ function getClientId(): string {
 }
 
 export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }: SheetMatchBoardProps) {
-  const router = useRouter()
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
   const clientIdRef = useRef<string>('')
   const { optimisticMatch, isPending, applyOptimistic, syncFromServer, rollback } =
@@ -59,7 +57,6 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
   const sheet = useScoreSheet(optimisticMatch)
 
   // SSEイベント: 他ユーザーの投擲を受信したらAPIから最新データを取得してローカル更新
-  // router.refresh()によるRSC全体再レンダリングを避けることで高速化
   const handleRealtimeEvent = useCallback(async (event: RealtimeScoreEvent) => {
     try {
       const res = await fetch(`/api/matches/${match.shareCode}`, { cache: 'no-store' })
@@ -67,18 +64,13 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
         const json = await res.json()
         if (json.data) {
           syncFromServer(toMatchData(json.data))
-          // 試合終了・セット終了時はRSCも更新
-          if (event.type === 'matchFinished') {
-            router.refresh()
-          }
           return
         }
       }
     } catch {
-      // フォールバック: RSC再レンダリング
+      // fetch失敗は無視（次のポーリングまたはSSEで回復）
     }
-    router.refresh()
-  }, [router, match.shareCode, syncFromServer])
+  }, [match.shareCode, syncFromServer])
 
   const { status: connStatus } = useRealtimeScore({
     shareCode: match.shareCode,
@@ -105,18 +97,22 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
           rollback(matchRef.current)
         } else {
           const json = await res.json()
-          // POSTレスポンスに最新MatchDataが含まれていればそれで同期（router.refresh()不要）
           if (json.match) {
             syncFromServer(toMatchData(json.match))
           } else {
-            router.refresh()
+            // matchが含まれない場合はAPIから再取得
+            const latest = await fetch(`/api/matches/${match.shareCode}`, { cache: 'no-store' })
+            if (latest.ok) {
+              const latestJson = await latest.json()
+              if (latestJson.data) syncFromServer(toMatchData(latestJson.data))
+            }
           }
         }
       } catch {
         rollback(matchRef.current)
       }
     },
-    [applyOptimistic, rollback, syncFromServer, router, match.shareCode]
+    [applyOptimistic, rollback, syncFromServer, match.shareCode]
   )
 
   const currentThrower = matchState.currentThrower
@@ -226,7 +222,14 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             <ScoreCellEditPopover
               target={editTarget}
               shareCode={match.shareCode}
-              onDone={() => { setEditTarget(null); router.refresh() }}
+              onDone={async () => {
+                setEditTarget(null)
+                const res = await fetch(`/api/matches/${match.shareCode}`, { cache: 'no-store' })
+                if (res.ok) {
+                  const json = await res.json()
+                  if (json.data) syncFromServer(toMatchData(json.data))
+                }
+              }}
               onCancel={() => setEditTarget(null)}
             />
           )}
