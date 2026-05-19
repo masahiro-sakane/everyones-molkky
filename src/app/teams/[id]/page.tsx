@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Badge } from '@/components/ui/Badge'
 import { MemberList } from '@/components/team/MemberList'
+import { DeleteTeamButton } from '@/components/team/DeleteTeamButton'
 import { getTeamById } from '@/services/teamService'
 import { listUsers } from '@/services/userService'
 
@@ -41,6 +42,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                   <Badge variant="default">{team.members.length}人のメンバー</Badge>
                 </div>
               </div>
+              <DeleteTeamButton teamId={team.id} teamName={team.name} />
             </div>
           </div>
 

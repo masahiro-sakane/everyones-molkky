@@ -67,5 +67,9 @@ export async function removeTeamMember(teamId: string, userId: string) {
 }
 
 export async function deleteTeam(id: string) {
+  const memberCount = await db.teamMember.count({ where: { teamId: id } })
+  if (memberCount > 0) {
+    throw new Error('TEAM_HAS_MEMBERS')
+  }
   return db.team.delete({ where: { id } })
 }

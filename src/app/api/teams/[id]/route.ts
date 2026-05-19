@@ -39,6 +39,12 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     await deleteTeam(id)
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'TEAM_HAS_MEMBERS') {
+      return NextResponse.json(
+        { success: false, error: 'プレイヤーが所属しているため削除できません' },
+        { status: 409 }
+      )
+    }
     console.error('DELETE /api/teams/[id] error:', error)
     return NextResponse.json({ success: false, error: 'チームの削除に失敗しました' }, { status: 500 })
   }
