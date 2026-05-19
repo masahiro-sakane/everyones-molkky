@@ -29,20 +29,28 @@ export function ScoreSheetView({
   editingThrowId,
 }: ScoreSheetViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // 現在投擲セルへ自動スクロール
+  // debounce: 楽観的更新→サーバー同期の2段階更新によるちらつきを防ぐ
   const currentRowIndex = data.currentCell?.rowIndex
   const currentTeamId = data.currentCell?.teamId
   useEffect(() => {
-    if (!currentRowIndex || !scrollContainerRef.current) return
-    const container = scrollContainerRef.current
-    const el = container.querySelector<HTMLElement>('[aria-current="true"]')
-    if (!el) return
-    // テーブル内の水平スクロールのみ行い、ページ縦スクロールは触らない
-    const containerRect = container.getBoundingClientRect()
-    const elRect = el.getBoundingClientRect()
-    const scrollLeft = container.scrollLeft + elRect.left - containerRect.left - containerRect.width / 2 + elRect.width / 2
-    container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' })
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current)
+    scrollTimerRef.current = setTimeout(() => {
+      if (!currentRowIndex || !scrollContainerRef.current) return
+      const container = scrollContainerRef.current
+      const el = container.querySelector<HTMLElement>('[aria-current="true"]')
+      if (!el) return
+      // テーブル内の水平スクロールのみ行い、ページ縦スクロールは触らない
+      const containerRect = container.getBoundingClientRect()
+      const elRect = el.getBoundingClientRect()
+      const scrollLeft = container.scrollLeft + elRect.left - containerRect.left - containerRect.width / 2 + elRect.width / 2
+      container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' })
+    }, 80)
+    return () => {
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current)
+    }
   }, [currentRowIndex, currentTeamId])
 
   return (
