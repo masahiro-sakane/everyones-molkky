@@ -21,17 +21,6 @@ export default async function HomePage() {
 
   return (
     <AppLayout>
-      {/* Hero */}
-      <section className="text-center py-10 px-4">
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/matches/new">
-            <Button variant="primary" size="lg">試合を始める</Button>
-          </Link>
-          <Link href="/teams/new">
-            <Button variant="secondary" size="lg">チームを作る</Button>
-          </Link>
-        </div>
-      </section>
 
       <div className={`grid grid-cols-1 ${activeMatches.length > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 max-w-4xl mx-auto`}>
         {/* 進行中の試合 */}
