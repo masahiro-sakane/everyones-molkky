@@ -6,16 +6,27 @@ import type { AdviceContext } from '@/types/vision'
 
 type CameraAdviceButtonProps = {
   ctx: AdviceContext
+  onOpenChange?: (open: boolean) => void
 }
 
-export function CameraAdviceButton({ ctx }: CameraAdviceButtonProps) {
+export function CameraAdviceButton({ ctx, onOpenChange }: CameraAdviceButtonProps) {
   const [open, setOpen] = useState(false)
+
+  const handleOpen = () => {
+    setOpen(true)
+    onOpenChange?.(true)
+  }
+
+  const handleClose = () => {
+    setOpen(false)
+    onOpenChange?.(false)
+  }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 transition-colors"
         aria-label="カメラでAI投擲アドバイスを取得"
         title="AIアドバイス"
@@ -27,7 +38,7 @@ export function CameraAdviceButton({ ctx }: CameraAdviceButtonProps) {
       </button>
 
       {open && (
-        <CameraCaptureDialog ctx={ctx} onClose={() => setOpen(false)} />
+        <CameraCaptureDialog ctx={ctx} onClose={handleClose} />
       )}
     </>
   )
