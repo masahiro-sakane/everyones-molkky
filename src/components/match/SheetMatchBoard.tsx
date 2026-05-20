@@ -15,6 +15,7 @@ import { WinnerBanner } from './WinnerBanner'
 import { ScoreCellEditPopover, type EditTarget } from './ScoreCellEditPopover'
 import { SetTransitionBanner } from './SetTransitionBanner'
 import { DiscardMatchButton } from './DiscardMatchButton'
+import { CameraAdviceButton } from './CameraAdviceButton'
 
 type SheetMatchBoardProps = {
   match: MatchData
@@ -160,19 +161,37 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
           />
 
           {/* 得点入力 */}
-          {!watchMode && currentThrower && (
-            <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
-              <ThrowRecorder
-                shareCode={match.shareCode}
-                currentTeamId={currentThrower.teamId}
-                currentUserId={currentThrower.userId}
-                isFirstThrow={sheet.isFirstThrow}
-                consecutiveMisses={matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)?.consecutiveMisses ?? 0}
-                onOptimisticThrow={handleOptimisticThrow}
-                isPending={isPending}
-              />
-            </div>
-          )}
+          {!watchMode && currentThrower && (() => {
+            const currentTeamScore = matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)
+            const consecutiveMisses = currentTeamScore?.consecutiveMisses ?? 0
+            const remainingScore = 50 - (currentTeamScore?.totalScore ?? 0)
+            const opponentRemainingScores = matchState.teamScores
+              .filter((t) => t.teamId !== currentThrower.teamId && !t.isDisqualified)
+              .map((t) => 50 - t.totalScore)
+            const adviceCtx = {
+              remainingScore,
+              consecutiveMisses,
+              opponentRemainingScores,
+              isLastChance: false,
+            }
+            return (
+              <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-neutral-600">{currentThrower.teamName}</span>
+                  <CameraAdviceButton ctx={adviceCtx} />
+                </div>
+                <ThrowRecorder
+                  shareCode={match.shareCode}
+                  currentTeamId={currentThrower.teamId}
+                  currentUserId={currentThrower.userId}
+                  isFirstThrow={sheet.isFirstThrow}
+                  consecutiveMisses={consecutiveMisses}
+                  onOptimisticThrow={handleOptimisticThrow}
+                  isPending={isPending}
+                />
+              </div>
+            )
+          })()}
 
           {/* 観戦モード */}
           {watchMode && (

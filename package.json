@@ -25,6 +25,7 @@
     "e2e:install": "playwright install chromium"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.97.1",
     "@auth/prisma-adapter": "^2.11.2",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
