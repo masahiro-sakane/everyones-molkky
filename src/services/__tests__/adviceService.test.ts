@@ -7,6 +7,14 @@ const baseCtx = (overrides?: Partial<AdviceContext>): AdviceContext => ({
   consecutiveMisses: 0,
   opponentRemainingScores: [30],
   isLastChance: false,
+  currentRound: 1,
+  remainingRounds: null,
+  thrower: {
+    level: 'intermediate',
+    canThrowVertical: false,
+    maxReliableDistance: null,
+  },
+  opponentConsecutiveMisses: [0],
   ...overrides,
 })
 

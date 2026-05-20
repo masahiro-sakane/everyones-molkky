@@ -174,11 +174,22 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             const opponentRemainingScores = matchState.teamScores
               .filter((t) => t.teamId !== currentThrower.teamId && !t.isDisqualified)
               .map((t) => 50 - t.totalScore)
+            const opponentConsecutiveMisses = matchState.teamScores
+              .filter((t) => t.teamId !== currentThrower.teamId && !t.isDisqualified)
+              .map((t) => t.consecutiveMisses)
             const adviceCtx = {
               remainingScore,
               consecutiveMisses,
               opponentRemainingScores,
               isLastChance: false,
+              currentRound: matchState.currentRound,
+              remainingRounds: matchState.remainingRounds,
+              opponentConsecutiveMisses,
+              thrower: {
+                level: 'intermediate' as const,
+                canThrowVertical: false,
+                maxReliableDistance: null,
+              },
             }
             return (
               <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
