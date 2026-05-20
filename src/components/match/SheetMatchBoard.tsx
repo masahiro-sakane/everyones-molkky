@@ -147,7 +147,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
         {/* 右カラム: 入力パネル or 観戦表示 + 順位・アクション行 */}
         <aside
           aria-label="入力・情報パネル"
-          className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1 flex flex-col gap-2 h-[calc(100svh-6rem)] lg:h-[calc(100svh-5rem)]"
+          className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1 flex flex-col gap-2 lg:h-[calc(100svh-5rem)]"
         >
           {/* 制限ルール状況 */}
           <MatchLimitStatus
@@ -161,7 +161,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
 
           {/* 得点入力 */}
           {!watchMode && currentThrower && (
-            <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
               <ThrowRecorder
                 shareCode={match.shareCode}
                 currentTeamId={currentThrower.teamId}
