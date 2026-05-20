@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useCamera } from '@/hooks/useCamera'
 import { usePinAnalysis } from '@/hooks/usePinAnalysis'
 import { AdviceResultPanel } from './AdviceResultPanel'
@@ -24,6 +24,7 @@ export function CameraCaptureDialog({ ctx, onClose }: CameraCaptureDialogProps) 
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     startCamera()
@@ -49,6 +50,7 @@ export function CameraCaptureDialog({ ctx, onClose }: CameraCaptureDialogProps) 
     setCapturedBlob(null)
     setPreviewUrl(null)
     reset()
+    if (fileInputRef.current) fileInputRef.current.value = ''
     startCamera()
   }
 
@@ -56,6 +58,17 @@ export function CameraCaptureDialog({ ctx, onClose }: CameraCaptureDialogProps) 
     if (!capturedBlob) return
     await analyze(capturedBlob)
   }
+
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setCapturedBlob(file)
+    setPreviewUrl(URL.createObjectURL(file))
+    stopCamera()
+    // input をリセットして同じファイルを再選択できるようにする
+    e.target.value = ''
+  }, [previewUrl, stopCamera])
 
   return (
     <div
@@ -105,6 +118,37 @@ export function CameraCaptureDialog({ ctx, onClose }: CameraCaptureDialogProps) 
                 </div>
               )}
             </div>
+          )}
+
+          {/* 画像アップロード（デバッグ用） */}
+          {!result && (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px bg-neutral-200" />
+              <span className="text-[10px] text-neutral-400 shrink-0">または</span>
+              <div className="flex-1 h-px bg-neutral-200" />
+            </div>
+          )}
+          {!result && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={handleFileUpload}
+                aria-label="画像ファイルを選択"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-2 rounded-lg border border-neutral-300 text-xs text-neutral-600 hover:bg-neutral-50 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M1 5.25A2.25 2.25 0 0 1 3.25 3h13.5A2.25 2.25 0 0 1 19 5.25v9.5A2.25 2.25 0 0 1 16.75 17H3.25A2.25 2.25 0 0 1 1 14.75v-9.5Zm1.5 5.81v3.69c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-2.69l-2.22-2.219a.75.75 0 0 0-1.06 0l-1.91 1.909-.138-.137a.75.75 0 0 0-1.06 0L6.17 11.56l-3.67-3.67v3.17Zm7.25-7.31a.75.75 0 0 0-.75.75v.008a.75.75 0 0 0 .75.75h.008a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75H9.75Z" clipRule="evenodd" />
+                </svg>
+                画像をアップロード
+              </button>
+            </>
           )}
 
           {/* エラー表示 */}
