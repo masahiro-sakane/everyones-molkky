@@ -40,6 +40,11 @@ function getClientId(): string {
 export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }: SheetMatchBoardProps) {
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
   const [cameraOpen, setCameraOpen] = useState(false)
+
+  const handleCameraOpenChange = (open: boolean) => {
+    setCameraOpen(open)
+    if (open) setEditTarget(null)
+  }
   const clientIdRef = useRef<string>('')
   const { optimisticMatch, isPending, applyOptimistic, syncFromServer, rollback } =
     useOptimisticMatch(match)
@@ -179,7 +184,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
               <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-neutral-600">{currentThrower.teamName}</span>
-                  <CameraAdviceButton ctx={adviceCtx} onOpenChange={setCameraOpen} />
+                  <CameraAdviceButton ctx={adviceCtx} onOpenChange={handleCameraOpenChange} />
                 </div>
                 <ThrowRecorder
                   shareCode={match.shareCode}
@@ -238,7 +243,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             onEditCell={!watchMode && !isFinished && !cameraOpen ? (throwId, skittles, rect) => setEditTarget({ throwId, currentSkittles: skittles, anchorRect: rect }) : undefined}
             editingThrowId={editTarget?.throwId}
           />
-          {editTarget && (
+          {editTarget && !cameraOpen && (
             <ScoreCellEditPopover
               target={editTarget}
               shareCode={match.shareCode}

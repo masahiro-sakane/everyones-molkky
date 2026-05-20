@@ -72,7 +72,7 @@ export function CameraCaptureDialog({ ctx, onClose }: CameraCaptureDialogProps) 
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/85"
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       onPointerDown={(e) => e.stopPropagation()}
     >
