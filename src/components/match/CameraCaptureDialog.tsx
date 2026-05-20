@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useCamera } from '@/hooks/useCamera'
 import { usePinAnalysis } from '@/hooks/usePinAnalysis'
 import { AdviceResultPanel } from './AdviceResultPanel'
@@ -70,7 +71,7 @@ export function CameraCaptureDialog({ ctx, onClose }: CameraCaptureDialogProps) 
     e.target.value = ''
   }, [previewUrl, stopCamera])
 
-  return (
+  const content = (
     <div
       className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
@@ -233,4 +234,6 @@ export function CameraCaptureDialog({ ctx, onClose }: CameraCaptureDialogProps) 
       </div>
     </div>
   )
+
+  return createPortal(content, document.body)
 }
