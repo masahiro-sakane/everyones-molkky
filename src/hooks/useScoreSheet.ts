@@ -385,7 +385,7 @@ export function useScoreSheet(match: MatchData): ScoreSheetData {
             } else {
               memberIdx = 0
             }
-            const member = col.members[memberIdx]
+            const member = actualMembers[memberIdx]
             currentCell = {
               rowIndex: rowIndex + 1,
               teamId: col.teamId,

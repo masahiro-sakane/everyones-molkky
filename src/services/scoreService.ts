@@ -104,14 +104,26 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     // 失格していないチームの一覧
     const activeTeams = updatedTeamScores.filter((s) => !s.isDisqualified)
 
-    // 勝利判定：50点到達、または失格していないチームが1つのみ残った場合
-    const lastTeamStanding =
-      !throwResult.isWinner && activeTeams.length === 1
-        ? activeTeams[0]
-        : null
-    const winnerId = throwResult.isWinner
-      ? validated.teamId
-      : lastTeamStanding?.teamId ?? null
+    // 勝利判定：
+    // - 50点到達 → 投擲チームが勝者
+    // - 残り1チーム → そのチームが勝者
+    // - 全チーム失格（残り0チーム）→ 最高得点チームが勝者（同点は winnerId=null で引き分け扱い）
+    let winnerId: string | null = null
+    if (throwResult.isWinner) {
+      winnerId = validated.teamId
+    } else if (activeTeams.length === 1) {
+      winnerId = activeTeams[0].teamId
+    } else if (activeTeams.length === 0) {
+      // 全チーム失格：最高得点チームを勝者とする
+      const maxScore = Math.max(...updatedTeamScores.map((s) => s.totalScore))
+      const topTeams = updatedTeamScores.filter((s) => s.totalScore === maxScore)
+      if (topTeams.length === 1) {
+        winnerId = topTeams[0].teamId
+      } else {
+        // 同点の場合は最後に投擲したチームを便宜上の勝者とする
+        winnerId = validated.teamId
+      }
+    }
 
     // 制限超過チェック（通常勝利がない場合のみ）
     let limitWinnerId: string | null = null
@@ -126,11 +138,13 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
         currentTurn.turnNumber % teamCount === 0 &&
         completedRounds >= match.turnLimit
       ) {
-        const activeScores = updatedTeamScores.filter((s) => !s.isDisqualified)
-        const maxScore = Math.max(...activeScores.map((s) => s.totalScore))
-        const topTeams = activeScores.filter((s) => s.totalScore === maxScore)
-        if (topTeams.length === 1) {
-          limitWinnerId = topTeams[0].teamId
+        // 失格していないチームを優先、全員失格なら全チームを対象にする
+        const scorePool = updatedTeamScores.filter((s) => !s.isDisqualified)
+        const candidates = scorePool.length > 0 ? scorePool : updatedTeamScores
+        if (candidates.length > 0) {
+          const maxScore = Math.max(...candidates.map((s) => s.totalScore))
+          const topTeams = candidates.filter((s) => s.totalScore === maxScore)
+          limitWinnerId = topTeams.length === 1 ? topTeams[0].teamId : validated.teamId
         }
       }
 
@@ -146,11 +160,12 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
         const elapsedMs = Date.now() - new Date(match.startedAt).getTime()
         const elapsedMinutes = elapsedMs / 1000 / 60
         if (elapsedMinutes >= match.timeLimitMinutes) {
-          const activeScores = updatedTeamScores.filter((s) => !s.isDisqualified)
-          const maxScore = Math.max(...activeScores.map((s) => s.totalScore))
-          const topTeams = activeScores.filter((s) => s.totalScore === maxScore)
-          if (topTeams.length === 1) {
-            limitWinnerId = topTeams[0].teamId
+          const scorePool = updatedTeamScores.filter((s) => !s.isDisqualified)
+          const candidates = scorePool.length > 0 ? scorePool : updatedTeamScores
+          if (candidates.length > 0) {
+            const maxScore = Math.max(...candidates.map((s) => s.totalScore))
+            const topTeams = candidates.filter((s) => s.totalScore === maxScore)
+            limitWinnerId = topTeams.length === 1 ? topTeams[0].teamId : validated.teamId
           }
         }
       }
@@ -182,19 +197,27 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     } else {
       // 試合継続：失格チームをスキップして次のターンを作成
       let nextTurnNumber = currentTurn.turnNumber + 1
+      let foundActive = false
 
       // 失格チームをスキップ（最大でも全チーム数分だけループ）
       for (let i = 0; i < teamCount; i++) {
         const teamIndex = (nextTurnNumber - 1) % teamCount
         const nextMatchTeam = match.matchTeams.find((mt) => mt.order === teamIndex + 1)
         const nextTeamScore = updatedTeamScores.find((s) => s.teamId === nextMatchTeam?.teamId)
-        if (!nextTeamScore?.isDisqualified) break
+        if (!nextTeamScore?.isDisqualified) {
+          foundActive = true
+          break
+        }
         nextTurnNumber++
       }
 
-      await tx.turn.create({
-        data: { setId: currentSet.id, turnNumber: nextTurnNumber },
-      })
+      // アクティブなチームが存在する場合のみ次ターンを作成
+      // （全員失格は winnerId 確定済みで通常ここには来ないが安全のため）
+      if (foundActive) {
+        await tx.turn.create({
+          data: { setId: currentSet.id, turnNumber: nextTurnNumber },
+        })
+      }
     }
 
     return {

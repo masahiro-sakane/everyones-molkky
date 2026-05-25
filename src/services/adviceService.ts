@@ -262,14 +262,22 @@ function buildInterfereAdvice(ctx: AdviceContext, standingPins: number[]): Throw
   const targetForOpp = standingPins.find((p) => p === oppMin)
   if (!targetForOpp) return null
 
+  const currentScore = WINNING_SCORE - ctx.remainingScore
+  const rawTotal = currentScore + targetForOpp
+  // 50超の場合は25リセット、ちょうど50なら勝利
+  const resultingTotal = rawTotal > WINNING_SCORE ? PENALIZED_SCORE : rawTotal
+  const winsNow = rawTotal === WINNING_SCORE
+
   return {
     targetPins: [targetForOpp],
     expectedScore: targetForOpp,
-    resultingTotal: WINNING_SCORE - ctx.remainingScore + targetForOpp,
-    winsNow: false,
-    reason: `相手があと${oppMin}点で勝利します。${targetForOpp}番を強く打って遠ざけることで妨害できます`,
+    resultingTotal,
+    winsNow,
+    reason: winsNow
+      ? `${targetForOpp}番を倒すと${WINNING_SCORE}点で勝利！（妨害も兼ねます）`
+      : `相手があと${oppMin}点で勝利します。${targetForOpp}番を強く打って遠ざけることで妨害できます`,
     riskLevel: 'medium',
-    intent: 'interfere',
+    intent: winsNow ? 'win' : 'interfere',
   }
 }
 
@@ -282,7 +290,9 @@ export function generateAdvice(
   if (standingPins.length === 0) return []
 
   const currentScore = WINNING_SCORE - ctx.remainingScore
-  const phase = getPhase(currentScore, false)
+  // 現在スコアが PENALIZED_SCORE(25)ちょうどの場合、直前にオーバーした可能性が高い
+  const wasOvershot = currentScore === PENALIZED_SCORE
+  const phase = getPhase(currentScore, wasOvershot)
   const interferePriority = calcInterferencePriority(ctx)
 
   const allCandidates = dedup(buildCandidates(standingPins, currentScore))

@@ -18,6 +18,7 @@ export async function POST(_request: NextRequest, { params }: Params) {
         '試合が見つかりません',
         '現在のゲームがまだ完了していません',
         '全ゲームが完了しています',
+        '次のゲームはすでに開始されています',
       ]
       if (clientErrors.includes(error.message)) {
         return NextResponse.json({ success: false, error: error.message }, { status: 422 })

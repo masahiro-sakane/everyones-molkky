@@ -251,6 +251,14 @@ export async function startNextSet(shareCode: string) {
       throw new Error('全ゲームが完了しています')
     }
 
+    // 二重実行ガード：次のセット番号がすでに存在する場合はスキップ
+    const alreadyExists = await tx.set.findFirst({
+      where: { matchId: match.id, setNumber: nextSetNumber },
+    })
+    if (alreadyExists) {
+      throw new Error('次のゲームはすでに開始されています')
+    }
+
     const teamCount = match.matchTeams.length
 
     // チーム投擲順を逆順に更新（order 1→N, 2→N-1, ...）
@@ -355,7 +363,13 @@ export async function getMatchWithScores(shareCode: string) {
       .map((uid) => {
         const user = extraUsers.find((u) => u.id === uid)
         if (!user) return null
-        return { userId: uid, role: 'member' as const, user }
+        return {
+          userId: uid,
+          teamId: mt.teamId,
+          role: 'member' as const,
+          joinedAt: new Date(0),
+          user,
+        }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
 
