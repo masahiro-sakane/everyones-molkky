@@ -194,7 +194,10 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             return (
               <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-neutral-600">{currentThrower.teamName}</span>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-neutral-400 leading-tight">{currentThrower.teamName}</span>
+                    <span className="text-sm font-semibold text-neutral-800 leading-tight">{currentThrower.userName}</span>
+                  </div>
                   <CameraAdviceButton ctx={adviceCtx} onOpenChange={handleCameraOpenChange} />
                 </div>
                 <ThrowRecorder
