@@ -47,7 +47,7 @@ export function CurrentThrower({
       )}
 
       {/* アクション（AIボタンなど） */}
-      {action && <div className="shrink-0 ml-1">{action}</div>}
+      {action && <div className="shrink-0 ml-1 self-stretch flex items-stretch">{action}</div>}
     </div>
   )
 }

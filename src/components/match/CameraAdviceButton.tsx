@@ -27,7 +27,7 @@ export function CameraAdviceButton({ ctx, onOpenChange }: CameraAdviceButtonProp
       <button
         type="button"
         onClick={handleOpen}
-        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-neutral-0/20 text-neutral-0 text-xs font-semibold hover:bg-neutral-0/30 transition-colors"
+        className="inline-flex items-center gap-1 px-2 self-stretch rounded-md bg-neutral-0/20 text-neutral-0 text-xs font-semibold hover:bg-neutral-0/30 transition-colors"
         aria-label="カメラでAI投擲アドバイスを取得"
         title="AIアドバイス"
       >
