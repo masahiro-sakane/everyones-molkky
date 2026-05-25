@@ -215,6 +215,8 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
     <form action={action} className="flex flex-col gap-6">
       <input type="hidden" name="matchType" value={matchMode} />
 
+      <h1 className="text-xl font-bold text-neutral-900">試合を作成</h1>
+
       {/* モード切り替えタブ */}
       <div className="flex gap-1 p-1 bg-neutral-100 rounded-md">
         <button

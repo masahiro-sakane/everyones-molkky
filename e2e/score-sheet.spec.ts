@@ -36,11 +36,12 @@ async function switchToSheetView(page: Page) {
   }
 }
 
-/** 得点入力モードに切替（フォルト後など） */
+/** 得点入力モードに切替（フォルトパネルが開いている場合は閉じる） */
 async function switchToScoreMode(page: Page) {
-  const scoreMode = page.getByTestId('mode-score')
-  if (await scoreMode.isVisible().catch(() => false)) {
-    await scoreMode.click()
+  // フォルトパネルが開いている場合は閉じるボタンをクリック
+  const closeBtn = page.getByRole('button', { name: '閉じる' })
+  if (await closeBtn.isVisible().catch(() => false)) {
+    await closeBtn.click()
   }
 }
 
@@ -71,7 +72,8 @@ async function recordMiss(page: Page) {
 
 /** フォルトを記録する */
 async function recordFault(page: Page, faultLabel: string) {
-  await page.getByTestId('mode-fault').click()
+  // Fボタンでフォルトパネルを開く
+  await page.getByTestId('fault-open').click()
   await page.getByRole('button', { name: faultLabel }).click()
   await page.getByTestId('record-fault').click()
   await waitForThrowRecorded(page)
@@ -150,6 +152,8 @@ async function createMatch(
 
   await teamAButton.click()
   await teamBButton.click()
+  // ゲーム数を1に設定（デフォルト2から1回減らす）
+  await page.getByLabel('ゲーム数を減らす').click()
   await page.getByTestId('start-match-submit').click()
   await page.waitForURL(
     (url) => url.pathname.startsWith('/matches/') && url.pathname !== '/matches/new',
@@ -180,7 +184,7 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
       const shareCode = await createMatch(page, teamAName, teamBName)
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
 
       // シートビューに切替
       await switchToSheetView(page)
@@ -246,7 +250,7 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
       const shareCode = await createMatch(page, teamAName, teamBName)
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
 
       // シートビューに切替
       await switchToSheetView(page)
@@ -284,9 +288,10 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
       await expect(page.getByTestId('current-thrower')).toContainText('投擲者A')
       await recordSkittle(page, 5)
 
-      // シートにリセットセル「25↩」が表示されることを確認
+      // シートにリセット後の累計行に↩が表示されることを確認
+      // （ScoreSheetRow: total-{teamId}-row-{N} が hasReset=true の場合に↩を表示する）
       await expect(
-        page.locator(`[data-testid^="cell-${teamAId2}"]`).filter({ hasText: '25↩' })
+        page.locator(`[data-testid^="total-${teamAId2}-row-"]`).filter({ hasText: '↩' })
       ).toBeVisible({ timeout: 5_000 })
 
       // リセット後の合計スコアが25点
@@ -343,7 +348,7 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
       const shareCode = await createMatch(page, teamAName, teamBName)
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
 
       // シートビューに切替
       await switchToSheetView(page)
@@ -408,6 +413,9 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
         await decreaseBtn.click()
       }
 
+      // ゲーム数を1に設定（デフォルト2から1回減らす）
+      await page.getByLabel('ゲーム数を減らす').click()
+
       await page.getByTestId('start-match-submit').click()
       await page.waitForURL(
         (url) => url.pathname.startsWith('/matches/') && url.pathname !== '/matches/new',
@@ -416,7 +424,7 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
       const shareCode = new URL(page.url()).pathname.replace('/matches/', '')
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
 
       // シートビューに切替
       await switchToSheetView(page)
@@ -484,6 +492,9 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
         await decreaseBtn.click()
       }
 
+      // ゲーム数を1に設定（デフォルト2から1回減らす）
+      await page.getByLabel('ゲーム数を減らす').click()
+
       await page.getByTestId('start-match-submit').click()
       await page.waitForURL(
         (url) => url.pathname.startsWith('/matches/') && url.pathname !== '/matches/new',
@@ -492,7 +503,7 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
       const shareCode = new URL(page.url()).pathname.replace('/matches/', '')
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
 
       // シートビューに切替
       await switchToSheetView(page)
@@ -518,7 +529,7 @@ test.describe('スコアシートビュー - 制限ルール網羅', () => {
 
       // ページをリロードして時間切れ表示を反映
       await page.reload()
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
 
       // シートビューに再切替
       await switchToSheetView(page)

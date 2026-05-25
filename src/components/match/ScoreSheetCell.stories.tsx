@@ -43,7 +43,7 @@ export const Miss: Story = {
 }
 
 export const Goal: Story = {
-  args: { cell: { ...baseCell, value: { kind: 'goal' } } },
+  args: { cell: { ...baseCell, value: { kind: 'goal', score: 10 } } },
 }
 
 export const Reset: Story = {

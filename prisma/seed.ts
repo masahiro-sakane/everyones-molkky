@@ -10,8 +10,8 @@ const db = new PrismaClient({ adapter })
 async function main() {
   console.log('シードデータを投入中...')
 
-  // ユーザーを作成
-  const users = await Promise.all([
+  // ユーザーを作成（チーム所属メンバー）
+  const teamUsers = await Promise.all([
     db.user.upsert({ where: { id: 'seed-user-1' }, update: {}, create: { id: 'seed-user-1', name: '田中 太郎' } }),
     db.user.upsert({ where: { id: 'seed-user-2' }, update: {}, create: { id: 'seed-user-2', name: '鈴木 花子' } }),
     db.user.upsert({ where: { id: 'seed-user-3' }, update: {}, create: { id: 'seed-user-3', name: '佐藤 一郎' } }),
@@ -19,6 +19,15 @@ async function main() {
     db.user.upsert({ where: { id: 'seed-user-5' }, update: {}, create: { id: 'seed-user-5', name: '高橋 三郎' } }),
     db.user.upsert({ where: { id: 'seed-user-6' }, update: {}, create: { id: 'seed-user-6', name: '伊藤 四郎' } }),
   ])
+
+  // チーム未所属メンバーを作成（member-selection.spec.ts で使用）
+  const unaffiliatedUsers = await Promise.all([
+    db.user.upsert({ where: { id: 'seed-user-7' }, update: {}, create: { id: 'seed-user-7', name: '大谷 翔平' } }),
+    db.user.upsert({ where: { id: 'seed-user-8' }, update: {}, create: { id: 'seed-user-8', name: '佐々木 朗希' } }),
+    db.user.upsert({ where: { id: 'seed-user-9' }, update: {}, create: { id: 'seed-user-9', name: '山本 由伸' } }),
+  ])
+
+  const users = [...teamUsers, ...unaffiliatedUsers]
   console.log(`ユーザー ${users.length} 件作成`)
 
   // チームAを作成

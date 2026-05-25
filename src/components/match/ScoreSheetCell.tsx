@@ -124,10 +124,10 @@ function CellContent({ value }: { value: Cell['value'] }) {
       return (
         <span
           className="relative inline-flex items-center justify-center w-6 h-6 rounded-full border-2 border-danger-500 text-danger-600 font-bold text-xs"
-          aria-label="ゴール（50点到達）"
+          aria-label={`ゴール（${value.score}点投擲で50点到達）`}
           title="ゴール（50点ちょうど）"
         >
-          50
+          {value.score}
         </span>
       )
     case 'reset':

@@ -92,11 +92,20 @@ export async function getTeamStats(teamId: string): Promise<TeamStats | null> {
 }
 
 export async function listTeamStats(): Promise<TeamStats[]> {
-  const teams = await db.team.findMany({ select: { id: true } })
-  const results = await Promise.all(teams.map((t) => getTeamStats(t.id)))
-  return results
-    .filter((s): s is TeamStats => s !== null)
-    .sort((a, b) => b.winRate - a.winRate || b.matchCount - a.matchCount)
+  // 試合に参加したチームのみ取得（パフォーマンス最適化）
+  const teamsWithMatches = await db.team.findMany({
+    where: { matchTeams: { some: {} } },
+    select: { id: true },
+  })
+  // バッチ処理でDB接続プールの枯渇を防止
+  const BATCH_SIZE = 20
+  const results: TeamStats[] = []
+  for (let i = 0; i < teamsWithMatches.length; i += BATCH_SIZE) {
+    const batch = teamsWithMatches.slice(i, i + BATCH_SIZE)
+    const batchResults = await Promise.all(batch.map((t) => getTeamStats(t.id)))
+    results.push(...batchResults.filter((s): s is TeamStats => s !== null))
+  }
+  return results.sort((a, b) => b.winRate - a.winRate || b.matchCount - a.matchCount)
 }
 
 // ---- ユーザー統計 ----

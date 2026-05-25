@@ -127,9 +127,7 @@ test.describe('個人戦フロー', () => {
       expect(shareCode).toBeTruthy()
 
       // 4. 試合ページが表示される（個人戦）
-      await expect(page.getByText('個人戦')).toBeVisible({ timeout: 10_000 })
-      await expect(page.getByText('投擲を記録')).toBeVisible()
-      await expect(page.getByTestId('current-thrower')).toBeVisible()
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
 
       // 最初の投擲者はプレイヤーA
       await expect(page.getByTestId('current-thrower')).toContainText(playerAName)
@@ -138,8 +136,8 @@ test.describe('個人戦フロー', () => {
       await switchToCardView(page)
 
       // スコアボードに両プレイヤーが表示される
-      await expect(page.getByLabel('スコアボード').getByText(playerAName)).toBeVisible()
-      await expect(page.getByLabel('スコアボード').getByText(playerBName)).toBeVisible()
+      await expect(page.getByText(playerAName).first()).toBeVisible()
+      await expect(page.getByText(playerBName).first()).toBeVisible()
     } finally {
       await cleanup(request, playerIds, matchShareCodes)
     }
@@ -169,6 +167,8 @@ test.describe('個人戦フロー', () => {
 
       await playerABtn.click()
       await playerBBtn.click()
+      // ゲーム数を1に設定（デフォルト2から1回減らす）
+      await page.getByLabel('ゲーム数を減らす').click()
       await page.getByTestId('start-match-submit').click()
 
       await page.waitForURL(

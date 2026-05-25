@@ -7,20 +7,22 @@ import { test, expect } from '@playwright/test'
 test.describe('試合フロー', () => {
   test('ホームページが表示される', async ({ page }) => {
     await page.goto('/')
+    // フッターナビゲーションの「試合を始める」リンクが表示される
     await expect(page.getByRole('link', { name: '試合を始める' }).first()).toBeVisible()
-    await expect(page.getByRole('link', { name: 'みんなのモルック' })).toBeVisible()
+    // ページタイトル（メタデータ）が正しい
+    await expect(page).toHaveTitle(/みんなのモルック/)
   })
 
   test('ナビゲーションが機能する', async ({ page }) => {
     await page.goto('/')
 
-    // チーム管理へ
-    await page.getByRole('link', { name: 'チーム管理' }).first().click()
+    // チームへ（フッターナビゲーションのラベルは「チーム」）
+    await page.getByRole('link', { name: 'チーム', exact: true }).first().click()
     await expect(page).toHaveURL('/teams')
     await expect(page.getByRole('heading', { name: 'チーム一覧' })).toBeVisible()
 
     // 統計へ
-    await page.getByRole('link', { name: '統計' }).first().click()
+    await page.getByRole('link', { name: '統計', exact: true }).first().click()
     await expect(page).toHaveURL('/stats')
     await expect(page.getByRole('heading', { name: '統計・分析' })).toBeVisible()
   })

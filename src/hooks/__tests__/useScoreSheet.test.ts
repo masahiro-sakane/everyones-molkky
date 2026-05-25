@@ -213,7 +213,7 @@ describe('useScoreSheet', () => {
       })
       const { result } = renderHook(() => useScoreSheet(match))
       const aCells = result.current.rows[4].cellsByTeam.get('a')!
-      expect(aCells[0].value).toEqual({ kind: 'goal' })
+      expect(aCells[0].value).toEqual({ kind: 'goal', score: 2 })
       expect(result.current.columns[0].isWinner).toBe(true)
     })
 

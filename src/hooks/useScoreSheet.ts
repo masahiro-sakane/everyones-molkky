@@ -86,7 +86,7 @@ function deriveCellValue(
   // ちょうど50 → ゴール
   if (candidateTotal === WINNING_SCORE) {
     return {
-      value: { kind: 'goal' },
+      value: { kind: 'goal', score: throwScore },
       nextTotal: WINNING_SCORE,
       isWinner: true,
       hasReset: false,

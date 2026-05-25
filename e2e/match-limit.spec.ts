@@ -131,7 +131,10 @@ test.describe('制限ルールテスト', () => {
       for (let i = 0; i < 10; i++) {
         await decreaseBtn.click()
       }
-      await expect(page.getByText('2', { exact: true })).toBeVisible()
+      await expect(page.getByText('2', { exact: true }).first()).toBeVisible()
+
+      // ゲーム数を1に設定（デフォルト2から1回減らす）
+      await page.getByLabel('ゲーム数を減らす').click()
 
       // 試合を開始
       await page.getByTestId('start-match-submit').click()
@@ -142,7 +145,7 @@ test.describe('制限ルールテスト', () => {
       matchShareCodes.push(shareCode)
 
       // 3. 試合画面が表示されること確認
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
       await switchToCardView(page)
 
       // ターン制限状況が表示される
@@ -218,7 +221,7 @@ test.describe('制限ルールテスト', () => {
       for (let i = 0; i < 9; i++) {
         await decreaseBtn.click()
       }
-      await expect(page.getByText('3', { exact: true })).toBeVisible()
+      await expect(page.getByText('3', { exact: true }).first()).toBeVisible()
 
       await page.getByTestId('start-match-submit').click()
       await page.waitForURL((url) => url.pathname.startsWith('/matches/') && url.pathname !== '/matches/new')
@@ -227,7 +230,7 @@ test.describe('制限ルールテスト', () => {
       const shareCode = matchPath.replace('/matches/', '')
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
       await switchToCardView(page)
 
       const limitStatus = page.getByLabel('ターン制限状況')
@@ -297,6 +300,9 @@ test.describe('制限ルールテスト', () => {
       // 4回クリックで最小値1に到達
       await expect(page.getByLabel('時間制限状況')).not.toBeVisible() // まだ試合未開始
 
+      // ゲーム数を1に設定（デフォルト2から1回減らす）
+      await page.getByLabel('ゲーム数を減らす').click()
+
       // 1分になるまで減らす（5分刻みで20→15→10→5→1）
       await page.getByTestId('start-match-submit').click()
       await page.waitForURL((url) => url.pathname.startsWith('/matches/') && url.pathname !== '/matches/new')
@@ -306,7 +312,7 @@ test.describe('制限ルールテスト', () => {
       matchShareCodes.push(shareCode)
 
       // 3. 試合画面が表示されること確認
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
       await switchToCardView(page)
 
       // 時間制限状況が表示される
@@ -331,7 +337,7 @@ test.describe('制限ルールテスト', () => {
 
       // ページをリロードして時間切れ表示を反映
       await page.reload()
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
       await switchToCardView(page)
 
       // 時間切れ表示の確認
@@ -393,7 +399,7 @@ test.describe('制限ルールテスト', () => {
       const shareCode = matchPath.replace('/matches/', '')
       matchShareCodes.push(shareCode)
 
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
       await switchToCardView(page)
 
       // 時間制限ステータスが表示される

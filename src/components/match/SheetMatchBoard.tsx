@@ -11,11 +11,12 @@ import { ThrowRecorder } from './ThrowRecorder'
 import { ShareButton } from './ShareButton'
 import { ConnectionStatus } from './ConnectionStatus'
 import { MatchLimitStatus } from './MatchLimitStatus'
-import { WinnerBanner } from './WinnerBanner'
+import { MatchResult } from './MatchResult'
 import { ScoreCellEditPopover, type EditTarget } from './ScoreCellEditPopover'
 import { SetTransitionBanner } from './SetTransitionBanner'
 import { DiscardMatchButton } from './DiscardMatchButton'
 import { CameraAdviceButton } from './CameraAdviceButton'
+import { CurrentThrower } from './CurrentThrower'
 
 type SheetMatchBoardProps = {
   match: MatchData
@@ -45,13 +46,15 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
     setCameraOpen(open)
     if (open) setEditTarget(null)
   }
-  const clientIdRef = useRef<string>('')
+  // clientId はクライアント側で一度だけ生成（useState の初期化関数はクライアント側のみ実行）
+  // useEffect 内で初期化すると SSE 接続時に空文字になり自己フィルタリングが効かなくなる
+  const [clientId] = useState(() => getClientId())
   const { optimisticMatch, isPending, applyOptimistic, syncFromServer, rollback } =
     useOptimisticMatch(match)
 
-  useEffect(() => {
-    clientIdRef.current = getClientId()
-  }, [])
+  // isPending を ref で保持（handleRealtimeEvent のクロージャから参照するため）
+  const isPendingRef = useRef(isPending)
+  isPendingRef.current = isPending
 
   // サーバーから最新データが来たら同期
   const matchRef = useRef(match)
@@ -64,7 +67,9 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
   const sheet = useScoreSheet(optimisticMatch)
 
   // SSEイベント: 他ユーザーの投擲を受信したらAPIから最新データを取得してローカル更新
-  const handleRealtimeEvent = useCallback(async (event: RealtimeScoreEvent) => {
+  // isPending 中（自分の投擲が処理中）はスキップ：楽観的更新が古いデータで上書きされるのを防ぐ
+  const handleRealtimeEvent = useCallback(async (_event: RealtimeScoreEvent) => {
+    if (isPendingRef.current) return
     try {
       const res = await fetch(`/api/matches/${match.shareCode}`, { cache: 'no-store' })
       if (res.ok) {
@@ -81,7 +86,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
 
   const { status: connStatus } = useRealtimeScore({
     shareCode: match.shareCode,
-    clientId: clientIdRef.current,
+    clientId,
     onEvent: handleRealtimeEvent,
   })
 
@@ -97,7 +102,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             teamId: pending.teamId,
             skittlesKnocked: pending.skittlesKnocked,
             faultType: pending.faultType ?? undefined,
-            clientId: clientIdRef.current,
+            clientId,
           }),
         })
         if (!res.ok) {
@@ -119,7 +124,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
         rollback(matchRef.current)
       }
     },
-    [applyOptimistic, rollback, syncFromServer, match.shareCode]
+    [applyOptimistic, rollback, syncFromServer, match.shareCode, clientId]
   )
 
   const currentThrower = matchState.currentThrower
@@ -140,7 +145,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
 
       {/* 試合終了バナー */}
       {isFinished && (
-        <WinnerBanner
+        <MatchResult
           winnerTeamId={matchState.winnerTeamId!}
           teams={matchState.teamScores}
           shareCode={match.shareCode}
@@ -193,11 +198,15 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             }
             return (
               <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-neutral-400 leading-tight">{currentThrower.teamName}</span>
-                    <span className="text-sm font-semibold text-neutral-800 leading-tight">{currentThrower.userName}</span>
-                  </div>
+                <div className="flex items-center justify-between mb-2 gap-2">
+                  <CurrentThrower
+                    teamName={currentThrower.teamName}
+                    throwerName={currentThrower.userName}
+                    teamOrder={currentThrower.teamOrder}
+                    totalTeams={currentThrower.totalTeams}
+                    nextTeamName={matchState.nextThrower?.teamName}
+                    nextThrowerName={matchState.nextThrower?.userName}
+                  />
                   <CameraAdviceButton ctx={adviceCtx} onOpenChange={handleCameraOpenChange} />
                 </div>
                 <ThrowRecorder

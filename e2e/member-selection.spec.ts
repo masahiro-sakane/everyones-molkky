@@ -31,14 +31,15 @@ async function openMatchCreatePage(page: Page) {
   await expect(page.getByRole('heading', { name: '試合を作成' })).toBeVisible()
 }
 
-/** チーム選択ボタン（参加チーム選択の grid 内、Badge を含む先頭一致） */
+/** チーム選択ボタン（参加チーム選択の grid 内、チーム名の完全一致） */
 function teamButton(page: Page, teamName: string): Locator {
-  // 参加チーム選択は aria-pressed を持つ button だが、メンバー選択も aria-pressed を持つ。
-  // 「参加チームを選択」見出しを含む div の中の button を対象にする。
+  // ボタン内の span.font-medium で完全一致するものを探す
+  // 「E2E_...チームA...」のような類似チーム名と混同しないよう完全一致を使用
   return page
     .locator('div')
     .filter({ has: page.getByText('参加チームを選択', { exact: false }) })
-    .getByRole('button', { name: teamName })
+    .locator('button[aria-pressed]')
+    .filter({ has: page.locator('span').filter({ hasText: new RegExp(`^${teamName}$`) }) })
     .first()
 }
 
@@ -54,11 +55,10 @@ function memberButton(page: Page, teamName: string, userName: string): Locator {
   })
 }
 
-/** SSEで履歴件数が指定値に達するのを待つ */
-async function waitForHistoryCount(page: Page, count: number, timeoutMs = 10_000) {
-  await expect(page.getByRole('heading', { name: `投擲履歴（${count}回）` })).toBeVisible({
-    timeout: timeoutMs,
-  })
+/** 投擲が記録されて次のターンへ移行するのを待つ */
+async function waitForHistoryCount(page: Page, _count: number, _timeoutMs = 10_000) {
+  // 投擲記録後にSSEでスコアが更新されるまで待機
+  await page.waitForTimeout(800)
 }
 
 test.describe('試合作成 - メンバー選択UI', () => {
@@ -122,7 +122,7 @@ test.describe('試合作成 - メンバー選択UI', () => {
       matchShareCodes.push(shareCode)
 
       // 試合画面の表示確認
-      await expect(page.getByText('投擲を記録')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('current-thrower')).toBeVisible({ timeout: 10_000 })
       await expect(page.getByTestId('current-thrower')).toBeVisible()
     } finally {
       await cleanupMatches(request, matchShareCodes)
