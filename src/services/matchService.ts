@@ -328,15 +328,23 @@ export async function getMatchWithScores(shareCode: string) {
   })
   if (!match) return null
 
-  // memberOrder に含まれる全ユーザーIDを収集（チーム未所属ユーザーを含む）
-  const allMemberOrderIds = match.matchTeams.flatMap((mt) => mt.memberOrder as string[])
-  const extraUserIds = allMemberOrderIds.filter(
-    (uid) => !match.matchTeams.some((mt) => mt.team.members.some((m) => m.userId === uid))
-  )
+  // 各チームの memberOrder に含まれるが team.members に存在しないユーザーIDを収集
+  // ※ 他チームのメンバーがゲスト参加している場合も含むため、チーム単位で判定する
+  const extraUserIdSet = new Set<string>()
+  for (const mt of match.matchTeams) {
+    const memberOrderIds = mt.memberOrder as string[]
+    for (const uid of memberOrderIds) {
+      if (!mt.team.members.some((m) => m.userId === uid)) {
+        extraUserIdSet.add(uid)
+      }
+    }
+  }
+
+  const extraUserIds = [...extraUserIdSet]
 
   if (extraUserIds.length === 0) return match
 
-  // チーム未所属だが memberOrder に含まれるユーザーを取得
+  // 補完が必要なユーザーをDBから取得
   const extraUsers = await db.user.findMany({ where: { id: { in: extraUserIds } } })
 
   // 各 matchTeam の team.members を memberOrder ベースで補完
