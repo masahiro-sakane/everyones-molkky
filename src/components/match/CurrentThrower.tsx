@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 type CurrentThrowerProps = {
   teamName: string
   throwerName: string
@@ -5,41 +7,47 @@ type CurrentThrowerProps = {
   totalTeams: number
   nextTeamName?: string
   nextThrowerName?: string
+  /** バーの右端に配置するアクション（AIボタンなど） */
+  action?: ReactNode
 }
 
 export function CurrentThrower({
   teamName,
   throwerName,
-  teamOrder,
-  totalTeams,
-  nextTeamName,
   nextThrowerName,
+  action,
 }: CurrentThrowerProps) {
   return (
     <div
-      className="bg-brand-50 border border-brand-200 rounded-lg px-3 py-1.5 flex items-center justify-between gap-3"
+      className="bg-brand-500 rounded-lg px-3 py-1.5 flex items-center gap-2"
       data-testid="current-thrower"
     >
-      <div className="flex items-center gap-2 min-w-0">
-        <div
-          className="w-7 h-7 rounded-full bg-brand-500 text-neutral-0 flex items-center justify-center text-sm font-bold shrink-0"
-          aria-hidden="true"
-        >
-          {throwerName.charAt(0)}
-        </div>
-        <span className="text-xs text-brand-600 font-medium shrink-0">投擲者:</span>
-        <span className="text-sm font-bold text-neutral-900 truncate">{throwerName}</span>
-        {teamName && <span className="text-xs text-neutral-500 truncate">({teamName})</span>}
+      {/* アイコン */}
+      <div
+        className="w-7 h-7 rounded-full bg-neutral-0/20 text-neutral-0 flex items-center justify-center text-sm font-bold shrink-0"
+        aria-hidden="true"
+      >
+        {throwerName.charAt(0)}
       </div>
-      <div className="flex items-center gap-3 shrink-0 text-xs text-neutral-400">
-        <span>チーム {teamOrder} / {totalTeams}</span>
-        {nextThrowerName && (
-          <span>
-            次: <span className="text-neutral-600">{nextThrowerName}</span>
-            {nextTeamName && <span className="ml-0.5">({nextTeamName})</span>}
-          </span>
+
+      {/* 現在の投擲者 */}
+      <div className="flex items-baseline gap-1.5 min-w-0 flex-1">
+        <span className="text-sm font-bold text-neutral-0 truncate">{throwerName}</span>
+        {teamName && (
+          <span className="text-xs text-neutral-0/70 truncate shrink-0">({teamName})</span>
         )}
       </div>
+
+      {/* 次の投擲者 */}
+      {nextThrowerName && (
+        <div className="flex items-center gap-1 shrink-0 text-xs text-neutral-0/70">
+          <span>次:</span>
+          <span className="text-neutral-0/90 font-medium">{nextThrowerName}</span>
+        </div>
+      )}
+
+      {/* アクション（AIボタンなど） */}
+      {action && <div className="shrink-0 ml-1">{action}</div>}
     </div>
   )
 }

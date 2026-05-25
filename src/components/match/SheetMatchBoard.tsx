@@ -198,7 +198,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             }
             return (
               <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
-                <div className="flex items-center justify-between mb-2 gap-2">
+                <div className="mb-2">
                   <CurrentThrower
                     teamName={currentThrower.teamName}
                     throwerName={currentThrower.userName}
@@ -206,8 +206,8 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
                     totalTeams={currentThrower.totalTeams}
                     nextTeamName={matchState.nextThrower?.teamName}
                     nextThrowerName={matchState.nextThrower?.userName}
+                    action={<CameraAdviceButton ctx={adviceCtx} onOpenChange={handleCameraOpenChange} />}
                   />
-                  <CameraAdviceButton ctx={adviceCtx} onOpenChange={handleCameraOpenChange} />
                 </div>
                 <ThrowRecorder
                   shareCode={match.shareCode}

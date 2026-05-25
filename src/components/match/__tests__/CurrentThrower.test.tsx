@@ -16,7 +16,21 @@ describe('CurrentThrower', () => {
     expect(screen.getByText('(チームA)')).toBeInTheDocument()
   })
 
-  it('投擲者ラベルが表示される', () => {
+  it('次の投擲者が表示される', () => {
+    render(
+      <CurrentThrower
+        teamName="チームA"
+        throwerName="田中 太郎"
+        teamOrder={1}
+        totalTeams={2}
+        nextThrowerName="佐藤 花子"
+      />
+    )
+    expect(screen.getByText('次:')).toBeInTheDocument()
+    expect(screen.getByText('佐藤 花子')).toBeInTheDocument()
+  })
+
+  it('次の投擲者が未設定のとき「次:」は表示されない', () => {
     render(
       <CurrentThrower
         teamName="チームA"
@@ -25,19 +39,7 @@ describe('CurrentThrower', () => {
         totalTeams={2}
       />
     )
-    expect(screen.getByText('投擲者:')).toBeInTheDocument()
-  })
-
-  it('チーム番号が表示される', () => {
-    render(
-      <CurrentThrower
-        teamName="チームB"
-        throwerName="佐藤 花子"
-        teamOrder={2}
-        totalTeams={3}
-      />
-    )
-    expect(screen.getByText(/チーム 2 \/ 3/)).toBeInTheDocument()
+    expect(screen.queryByText('次:')).not.toBeInTheDocument()
   })
 
   it('投擲者名の頭文字がアバターに表示される', () => {
@@ -49,8 +51,20 @@ describe('CurrentThrower', () => {
         totalTeams={2}
       />
     )
-    // aria-hiddenなのでaria-hidden=trueで探す
     const avatar = document.querySelector('[aria-hidden="true"]')
     expect(avatar?.textContent).toBe('田')
+  })
+
+  it('action propに渡したノードが表示される', () => {
+    render(
+      <CurrentThrower
+        teamName="チームA"
+        throwerName="田中 太郎"
+        teamOrder={1}
+        totalTeams={2}
+        action={<button>AI</button>}
+      />
+    )
+    expect(screen.getByRole('button', { name: 'AI' })).toBeInTheDocument()
   })
 })
