@@ -198,16 +198,18 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             }
             return (
               <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
-                <div className="mb-2">
-                  <CurrentThrower
-                    teamName={currentThrower.teamName}
-                    throwerName={currentThrower.userName}
-                    teamOrder={currentThrower.teamOrder}
-                    totalTeams={currentThrower.totalTeams}
-                    nextTeamName={matchState.nextThrower?.teamName}
-                    nextThrowerName={matchState.nextThrower?.userName}
-                    action={<CameraAdviceButton ctx={adviceCtx} onOpenChange={handleCameraOpenChange} />}
-                  />
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <CurrentThrower
+                      teamName={currentThrower.teamName}
+                      throwerName={currentThrower.userName}
+                      teamOrder={currentThrower.teamOrder}
+                      totalTeams={currentThrower.totalTeams}
+                      nextTeamName={matchState.nextThrower?.teamName}
+                      nextThrowerName={matchState.nextThrower?.userName}
+                    />
+                  </div>
+                  <CameraAdviceButton ctx={adviceCtx} onOpenChange={handleCameraOpenChange} />
                 </div>
                 <ThrowRecorder
                   shareCode={match.shareCode}

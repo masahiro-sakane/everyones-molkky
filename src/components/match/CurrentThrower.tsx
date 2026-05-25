@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react'
-
 type CurrentThrowerProps = {
   teamName: string
   throwerName: string
@@ -7,15 +5,12 @@ type CurrentThrowerProps = {
   totalTeams: number
   nextTeamName?: string
   nextThrowerName?: string
-  /** バーの右端に配置するアクション（AIボタンなど） */
-  action?: ReactNode
 }
 
 export function CurrentThrower({
   teamName,
   throwerName,
   nextThrowerName,
-  action,
 }: CurrentThrowerProps) {
   return (
     <div
@@ -45,9 +40,6 @@ export function CurrentThrower({
           <span className="text-neutral-0/90 font-medium">{nextThrowerName}</span>
         </div>
       )}
-
-      {/* アクション（AIボタンなど） */}
-      {action && <div className="shrink-0 ml-1 self-stretch flex items-stretch">{action}</div>}
     </div>
   )
 }

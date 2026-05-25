@@ -55,16 +55,15 @@ describe('CurrentThrower', () => {
     expect(avatar?.textContent).toBe('田')
   })
 
-  it('action propに渡したノードが表示される', () => {
+  it('チーム名が存在しない場合はチーム名括弧表示がない', () => {
     render(
       <CurrentThrower
-        teamName="チームA"
+        teamName=""
         throwerName="田中 太郎"
         teamOrder={1}
         totalTeams={2}
-        action={<button>AI</button>}
       />
     )
-    expect(screen.getByRole('button', { name: 'AI' })).toBeInTheDocument()
+    expect(screen.queryByText(/\(/)).not.toBeInTheDocument()
   })
 })
