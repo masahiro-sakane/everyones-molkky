@@ -161,7 +161,7 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
     avgScore: Math.round((totalScore / throwCount) * 10) / 10,
     missRate: Math.round((missCount / throwCount) * 100),
     faultRate: Math.round((faultCount / throwCount) * 100),
-    maxScore: throws.reduce((sum, t) => sum + t.score, 0),
+    maxScore: maxScore,
     highestSingleThrow: maxScore,
   }
 }

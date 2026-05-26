@@ -40,7 +40,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ success: true, data: updated })
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({ success: false, error: error.issues }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'リクエストの形式が正しくありません' }, { status: 400 })
     }
     console.error('PATCH /api/matches/[shareCode] error:', error)
     return NextResponse.json({ success: false, error: '試合の更新に失敗しました' }, { status: 500 })

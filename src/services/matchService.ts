@@ -263,20 +263,22 @@ export async function startNextSet(shareCode: string) {
 
     // チーム投擲順を逆順に更新（order 1→N, 2→N-1, ...）
     // 一時的に負の値にしてからセットすることで unique 制約違反を回避
-    for (const mt of match.matchTeams) {
-      await tx.matchTeam.update({
-        where: { id: mt.id },
-        data: { order: -(mt.order) },
-      })
-    }
-    for (const mt of match.matchTeams) {
-      const newOrder = teamCount + 1 - mt.order
-      const newMemberOrder = [...mt.memberOrder].reverse()
-      await tx.matchTeam.update({
-        where: { id: mt.id },
-        data: { order: newOrder, memberOrder: newMemberOrder },
-      })
-    }
+    await Promise.all(
+      match.matchTeams.map((mt) =>
+        tx.matchTeam.update({
+          where: { id: mt.id },
+          data: { order: -(mt.order) },
+        })
+      )
+    )
+    await Promise.all(
+      match.matchTeams.map((mt) =>
+        tx.matchTeam.update({
+          where: { id: mt.id },
+          data: { order: teamCount + 1 - mt.order, memberOrder: [...mt.memberOrder].reverse() },
+        })
+      )
+    )
 
     // 新セット作成
     const newSet = await tx.set.create({

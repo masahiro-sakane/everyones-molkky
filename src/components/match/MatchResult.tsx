@@ -10,13 +10,14 @@ type TeamScore = {
 }
 
 type MatchResultProps = {
-  winnerTeamId: string
+  winnerTeamId: string | null
   teams: TeamScore[]
   shareCode: string
 }
 
 export function MatchResult({ winnerTeamId, teams, shareCode }: MatchResultProps) {
-  const winner = teams.find((t) => t.teamId === winnerTeamId)
+  const isDraw = winnerTeamId === null
+  const winner = isDraw ? undefined : teams.find((t) => t.teamId === winnerTeamId)
   const others = teams
     .filter((t) => t.teamId !== winnerTeamId)
     .sort((a, b) => b.totalScore - a.totalScore)
@@ -25,12 +26,18 @@ export function MatchResult({ winnerTeamId, teams, shareCode }: MatchResultProps
     <div className="flex flex-col items-center gap-6 py-8" data-testid="match-result">
       <div className="text-center">
         <p className="text-xs font-medium text-success-600 mb-1">試合終了</p>
-        <h2 className="text-2xl font-bold text-neutral-900">
-          {winner?.teamName ?? '???'} の勝利！
-        </h2>
-        <p className="text-4xl font-black text-success-600 mt-2 tabular-nums">
-          {winner?.totalScore ?? 0}点
-        </p>
+        {isDraw ? (
+          <h2 className="text-2xl font-bold text-neutral-900">引き分け</h2>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold text-neutral-900">
+              {winner?.teamName ?? '不明'} の勝利！
+            </h2>
+            <p className="text-4xl font-black text-success-600 mt-2 tabular-nums">
+              {winner?.totalScore ?? 0}点
+            </p>
+          </>
+        )}
       </div>
 
       {/* 最終スコア */}

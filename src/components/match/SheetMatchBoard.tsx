@@ -18,6 +18,8 @@ import { DiscardMatchButton } from './DiscardMatchButton'
 import { CameraAdviceButton } from './CameraAdviceButton'
 import { CurrentThrower } from './CurrentThrower'
 
+const WINNING_SCORE = 50
+
 type SheetMatchBoardProps = {
   match: MatchData
   /** 観戦モード（投擲入力を非表示） */
@@ -146,7 +148,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
       {/* 試合終了バナー */}
       {isFinished && (
         <MatchResult
-          winnerTeamId={matchState.winnerTeamId!}
+          winnerTeamId={matchState.winnerTeamId ?? null}
           teams={matchState.teamScores}
           shareCode={match.shareCode}
         />
@@ -175,10 +177,10 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
           {!watchMode && currentThrower && (() => {
             const currentTeamScore = matchState.teamScores.find((t) => t.teamId === currentThrower.teamId)
             const consecutiveMisses = currentTeamScore?.consecutiveMisses ?? 0
-            const remainingScore = 50 - (currentTeamScore?.totalScore ?? 0)
+            const remainingScore = WINNING_SCORE - (currentTeamScore?.totalScore ?? 0)
             const opponentRemainingScores = matchState.teamScores
               .filter((t) => t.teamId !== currentThrower.teamId && !t.isDisqualified)
-              .map((t) => 50 - t.totalScore)
+              .map((t) => WINNING_SCORE - t.totalScore)
             const opponentConsecutiveMisses = matchState.teamScores
               .filter((t) => t.teamId !== currentThrower.teamId && !t.isDisqualified)
               .map((t) => t.consecutiveMisses)

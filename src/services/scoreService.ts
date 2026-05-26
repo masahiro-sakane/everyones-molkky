@@ -114,15 +114,13 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     } else if (activeTeams.length === 1) {
       winnerId = activeTeams[0].teamId
     } else if (activeTeams.length === 0) {
-      // 全チーム失格：最高得点チームを勝者とする
+      // 全チーム失格：最高得点チームを勝者とする（失格チーム自身は除外しない）
       const maxScore = Math.max(...updatedTeamScores.map((s) => s.totalScore))
       const topTeams = updatedTeamScores.filter((s) => s.totalScore === maxScore)
       if (topTeams.length === 1) {
         winnerId = topTeams[0].teamId
-      } else {
-        // 同点の場合は最後に投擲したチームを便宜上の勝者とする
-        winnerId = validated.teamId
       }
+      // 同点の場合は引き分け（winnerId = null のまま）
     }
 
     // 制限超過チェック（通常勝利がない場合のみ）
