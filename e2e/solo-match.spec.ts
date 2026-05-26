@@ -139,9 +139,9 @@ test.describe('個人戦フロー', () => {
       // （truncate スタイルで Playwright が hidden 判定するため toContainText で検証）
       await expect(page.getByTestId('current-thrower')).toContainText(playerAName)
 
-      // 順位表に両プレイヤーが表示される（個人戦はチーム名 = プレイヤー名）
-      await expect(page.getByTestId('rankings')).toContainText(playerAName)
-      await expect(page.getByTestId('rankings')).toContainText(playerBName)
+      // スコアシートヘッダーに両プレイヤーが表示される（個人戦はチーム名 = プレイヤー名）
+      await expect(page.getByRole('grid', { name: 'スコアシート' })).toContainText(playerAName)
+      await expect(page.getByRole('grid', { name: 'スコアシート' })).toContainText(playerBName)
     } finally {
       await cleanup(request, playerIds, matchShareCodes)
     }

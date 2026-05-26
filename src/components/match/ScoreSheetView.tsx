@@ -65,7 +65,7 @@ export function ScoreSheetView({
           aria-label="スコアシート"
           className="w-full border-collapse"
         >
-          <ScoreSheetTeamHeader columns={data.columns} />
+          <ScoreSheetTeamHeader columns={data.columns} rankings={data.rankings} />
           <tbody>
             {data.rows.map((row) => (
               <ScoreSheetRow

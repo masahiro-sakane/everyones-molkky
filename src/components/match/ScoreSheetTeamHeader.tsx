@@ -1,18 +1,20 @@
 'use client'
 
-import type { TeamColumn } from '@/types/scoreSheet'
+import type { TeamColumn, TeamRanking } from '@/types/scoreSheet'
 import { Badge } from '@/components/ui/Badge'
 
 type ScoreSheetTeamHeaderProps = {
   columns: TeamColumn[]
+  rankings?: TeamRanking[]
 }
 
 /**
  * スコアシートの2段ヘッダー
- * 1段目: チーム名（A: チームA / B: チームB ...）
+ * 1段目: チーム名 + 順位バッジ（A: チームA / B: チームB ...）
  * 2段目: メンバー名（投擲順番号 + 名前）+ 計列
  */
-export function ScoreSheetTeamHeader({ columns }: ScoreSheetTeamHeaderProps) {
+export function ScoreSheetTeamHeader({ columns, rankings = [] }: ScoreSheetTeamHeaderProps) {
+  const rankMap = new Map(rankings.map((r) => [r.teamId, r.rank]))
   return (
     <thead className="sticky top-0 z-20 bg-neutral-0">
       {/* チーム名行 */}
@@ -41,6 +43,18 @@ export function ScoreSheetTeamHeader({ columns }: ScoreSheetTeamHeaderProps) {
               ].join(' ')}
             >
               <div className="flex items-center gap-1.5 flex-wrap">
+                {(() => {
+                  const rank = rankMap.get(col.teamId)
+                  if (rank === undefined) return null
+                  return (
+                    <span className={[
+                      'inline-flex items-center justify-center w-8 h-5 rounded-full text-[10px] font-bold shrink-0',
+                      rank === 1 ? 'bg-warning-100 text-warning-700 border border-warning-400' : 'bg-neutral-200 text-neutral-600',
+                    ].join(' ')}>
+                      {rank}位
+                    </span>
+                  )
+                })()}
                 <span
                   className={[
                     'text-sm font-bold truncate',
