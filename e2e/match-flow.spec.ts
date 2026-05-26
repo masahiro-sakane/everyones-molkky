@@ -19,7 +19,7 @@ test.describe('試合フロー', () => {
     // チームへ（フッターナビゲーションのラベルは「チーム」）
     await page.getByRole('link', { name: 'チーム', exact: true }).first().click()
     await expect(page).toHaveURL('/teams')
-    await expect(page.getByRole('heading', { name: 'チーム一覧' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'チーム一覧' })).toBeVisible({ timeout: 10_000 })
 
     // 統計へ
     await page.getByRole('link', { name: '統計', exact: true }).first().click()

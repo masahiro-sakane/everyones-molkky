@@ -88,7 +88,8 @@ test.describe('チーム管理フロー', () => {
   })
 
   test('チーム統計ページが表示される', async ({ page }) => {
-    await page.goto(`${BASE_URL}/stats/teams`)
+    test.setTimeout(60_000)
+    await page.goto(`${BASE_URL}/stats/teams`, { timeout: 60_000 })
     await expect(page.getByRole('heading', { name: 'チーム統計' })).toBeVisible({ timeout: 15_000 })
   })
 

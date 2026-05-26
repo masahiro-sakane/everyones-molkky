@@ -237,7 +237,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
 
           {/* 順位 */}
           {sheet.rankings.length > 0 && (
-            <div className="flex flex-col gap-1.5 px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-md">
+            <div className="flex flex-col gap-1.5 px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-md" data-testid="rankings">
               {sheet.rankings.map((r) => (
                 <div key={r.teamId} className="flex items-center gap-2 text-sm" data-testid={`rank-${r.rank}`}>
                   <span className={[

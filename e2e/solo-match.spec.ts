@@ -135,9 +135,13 @@ test.describe('個人戦フロー', () => {
       // 安定動作のためカードビューに切替
       await switchToCardView(page)
 
-      // スコアボードに両プレイヤーが表示される
-      await expect(page.getByText(playerAName).first()).toBeVisible()
-      await expect(page.getByText(playerBName).first()).toBeVisible()
+      // 現在の投擲者バーにプレイヤーAが表示される
+      // （truncate スタイルで Playwright が hidden 判定するため toContainText で検証）
+      await expect(page.getByTestId('current-thrower')).toContainText(playerAName)
+
+      // 順位表に両プレイヤーが表示される（個人戦はチーム名 = プレイヤー名）
+      await expect(page.getByTestId('rankings')).toContainText(playerAName)
+      await expect(page.getByTestId('rankings')).toContainText(playerBName)
     } finally {
       await cleanup(request, playerIds, matchShareCodes)
     }
