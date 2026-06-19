@@ -94,7 +94,12 @@ test.describe('チーム管理フロー', () => {
   })
 
   test('プレイヤー統計ページが表示される', async ({ page }) => {
-    await page.goto(`${BASE_URL}/stats/users`)
-    await expect(page.getByRole('heading', { name: 'プレイヤー統計' })).toBeVisible()
+    // 統計ページは全試合データを集計するため、全件連続実行の終盤では
+    // 描画に時間がかかる。チーム統計テストと同様にタイムアウトを延長する。
+    test.setTimeout(60_000)
+    await page.goto(`${BASE_URL}/stats/users`, { timeout: 60_000 })
+    await expect(page.getByRole('heading', { name: 'プレイヤー統計' })).toBeVisible({
+      timeout: 15_000,
+    })
   })
 })

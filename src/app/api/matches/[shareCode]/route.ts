@@ -54,13 +54,8 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     if (!match) {
       return NextResponse.json({ success: false, error: '試合が見つかりません' }, { status: 404 })
     }
-    // 進行中の試合は削除不可（終了済みまたは待機中のみ許可）
-    if (match.status === 'IN_PROGRESS') {
-      return NextResponse.json(
-        { success: false, error: '進行中の試合は削除できません' },
-        { status: 409 }
-      )
-    }
+    // 進行中・終了済み・待機中いずれの試合も破棄可能
+    // （間違えて開始した試合をその場で削除できるようにするため）
     await deleteMatch(match.id)
     return NextResponse.json({ success: true })
   } catch (error) {
