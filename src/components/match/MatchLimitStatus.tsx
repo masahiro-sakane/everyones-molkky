@@ -9,6 +9,7 @@ type Props = {
   startedAt: Date | string | null
   remainingRounds: number | null
   currentRound: number
+  actions?: React.ReactNode
 }
 
 export function MatchLimitStatus({
@@ -18,6 +19,7 @@ export function MatchLimitStatus({
   startedAt,
   remainingRounds,
   currentRound,
+  actions,
 }: Props) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
@@ -33,7 +35,14 @@ export function MatchLimitStatus({
     return () => clearInterval(id)
   }, [limitType, startedAt])
 
-  if (limitType === 'NONE') return null
+  if (limitType === 'NONE') {
+    if (!actions) return null
+    return (
+      <div className="flex items-center justify-end gap-1">
+        {actions}
+      </div>
+    )
+  }
 
   if (limitType === 'TURNS' && turnLimit !== null) {
     const isWarning = (remainingRounds ?? 0) <= 3
@@ -48,15 +57,18 @@ export function MatchLimitStatus({
         aria-label="ターン制限状況"
       >
         <span>ラウンド</span>
-        <span className="font-bold tabular-nums">
-          {currentRound} / {turnLimit}
-          {remainingRounds !== null && remainingRounds > 0 && (
-            <span className="ml-1 text-xs font-normal">（残り {remainingRounds} ラウンド）</span>
-          )}
-          {remainingRounds === 0 && (
-            <span className="ml-1 text-xs font-normal">（最終ラウンド）</span>
-          )}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold tabular-nums">
+            {currentRound} / {turnLimit}
+            {remainingRounds !== null && remainingRounds > 0 && (
+              <span className="ml-1 text-xs font-normal">（残り {remainingRounds} ラウンド）</span>
+            )}
+            {remainingRounds === 0 && (
+              <span className="ml-1 text-xs font-normal">（最終ラウンド）</span>
+            )}
+          </span>
+          {actions && <div className="flex items-center gap-1">{actions}</div>}
+        </div>
       </div>
     )
   }
@@ -66,7 +78,7 @@ export function MatchLimitStatus({
     const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds)
     const remainingMinutes = Math.floor(remainingSeconds / 60)
     const remainingSecondsDisplay = remainingSeconds % 60
-    const isWarning = remainingSeconds <= 180 // 残り3分
+    const isWarning = remainingSeconds <= 180
     const isOver = remainingSeconds === 0
 
     return (
@@ -83,11 +95,14 @@ export function MatchLimitStatus({
         aria-live="polite"
       >
         <span>{isOver ? '時間終了（ラウンド終了で決定）' : '残り時間'}</span>
-        {!isOver && (
-          <span className="font-bold tabular-nums text-base">
-            {String(remainingMinutes).padStart(2, '0')}:{String(remainingSecondsDisplay).padStart(2, '0')}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!isOver && (
+            <span className="font-bold tabular-nums text-base">
+              {String(remainingMinutes).padStart(2, '0')}:{String(remainingSecondsDisplay).padStart(2, '0')}
+            </span>
+          )}
+          {actions && <div className="flex items-center gap-1">{actions}</div>}
+        </div>
       </div>
     )
   }

@@ -10,7 +10,6 @@ import { useOptimisticMatch, type PendingThrow } from '@/hooks/useOptimisticMatc
 import { ScoreSheetView } from './ScoreSheetView'
 import { ThrowRecorder } from './ThrowRecorder'
 import { ShareButton } from './ShareButton'
-import { ConnectionStatus } from './ConnectionStatus'
 import { MatchLimitStatus } from './MatchLimitStatus'
 import { MatchResult } from './MatchResult'
 import { ScoreCellEditPopover, type EditTarget } from './ScoreCellEditPopover'
@@ -156,7 +155,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
           aria-label="入力・情報パネル"
           className="lg:sticky lg:top-4 lg:self-start lg:order-2 order-1 flex flex-col gap-2 h-[calc(100svh-8rem)] lg:h-[calc(100svh-5rem)]"
         >
-          {/* 制限ルール状況 */}
+          {/* 制限ルール状況 + アクション */}
           <MatchLimitStatus
             limitType={match.limitType}
             turnLimit={match.turnLimit}
@@ -164,6 +163,14 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             startedAt={match.startedAt}
             remainingRounds={matchState.remainingRounds}
             currentRound={matchState.currentRound}
+            actions={
+              !watchMode ? (
+                <>
+                  <ShareButton shareCode={match.shareCode} iconOnly />
+                  {canDiscard && <DiscardMatchButton shareCode={match.shareCode} iconOnly />}
+                </>
+              ) : undefined
+            }
           />
 
           {/* 得点入力 */}
@@ -193,7 +200,7 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             }
             return (
               <div className="relative bg-neutral-0 border border-neutral-300 rounded-lg p-3 flex flex-col flex-1 min-h-0 overflow-hidden">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-1 mb-2">
                   <div className="flex-1 min-w-0">
                     <CurrentThrower
                       teamName={currentThrower.teamName}
@@ -228,12 +235,12 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
             </div>
           )}
 
-          {/* アクション */}
-          <div className="flex items-center gap-2 justify-end">
-            {canDiscard && <DiscardMatchButton shareCode={match.shareCode} />}
-            <ShareButton shareCode={match.shareCode} />
-            <ConnectionStatus status={connStatus} />
-          </div>
+          {/* 観戦モードの共有ボタン */}
+          {watchMode && (
+            <div className="flex items-center justify-end">
+              <ShareButton shareCode={match.shareCode} />
+            </div>
+          )}
         </aside>
 
         {/* スコアシート */}

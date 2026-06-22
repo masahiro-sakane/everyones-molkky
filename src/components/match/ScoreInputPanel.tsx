@@ -163,8 +163,8 @@ function ScoreInputPanelInner({
       <div className="flex gap-2">
         <Button
           variant="danger"
-          size="md"
-          className="flex-1"
+          size="lg"
+          className="flex-1 !h-14 !text-lg"
           onClick={handleMiss}
           disabled={disabled || isLoading}
           aria-label="ミス（0点）を記録する"
@@ -174,8 +174,8 @@ function ScoreInputPanelInner({
         </Button>
         <Button
           variant="primary"
-          size="md"
-          className="flex-1"
+          size="lg"
+          className="flex-1 !h-14 !text-lg"
           onClick={handleConfirm}
           disabled={disabled || isLoading || selected === null}
           isLoading={isLoading}
@@ -187,7 +187,8 @@ function ScoreInputPanelInner({
         {onFaultOpen && (
           <Button
             variant="secondary"
-            size="md"
+            size="lg"
+            className="!h-14 !text-lg px-4"
             onClick={onFaultOpen}
             disabled={disabled || isLoading}
             data-testid="fault-open"

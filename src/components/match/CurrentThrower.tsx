@@ -5,19 +5,21 @@ type CurrentThrowerProps = {
   totalTeams: number
   nextTeamName?: string
   nextThrowerName?: string
+  actions?: React.ReactNode
 }
 
 export function CurrentThrower({
   teamName,
   throwerName,
   nextThrowerName,
+  actions,
 }: CurrentThrowerProps) {
   return (
     <div
       className="bg-brand-500 rounded-lg px-3 py-1.5 flex items-center gap-2"
       data-testid="current-thrower"
     >
-      {/* アイコン */}
+      {/* アバター */}
       <div
         className="w-7 h-7 rounded-full bg-neutral-0/20 text-neutral-0 flex items-center justify-center text-sm font-bold shrink-0"
         aria-hidden="true"
@@ -40,6 +42,9 @@ export function CurrentThrower({
           <span className="text-neutral-0/90 font-medium">{nextThrowerName}</span>
         </div>
       )}
+
+      {/* アクションスロット（共有・破棄など） */}
+      {actions && <div className="flex items-center gap-1 shrink-0">{actions}</div>}
     </div>
   )
 }
