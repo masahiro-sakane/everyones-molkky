@@ -5,6 +5,7 @@ import { useMatch, type MatchData } from '@/hooks/useMatch'
 import { useScoreSheet } from '@/hooks/useScoreSheet'
 import { useRealtimeScore, type RealtimeScoreEvent } from '@/hooks/useRealtimeScore'
 import { toMatchData } from '@/lib/matchDataMapper'
+import { fetchLatestForSync } from '@/lib/realtimeSync'
 import { useOptimisticMatch, type PendingThrow } from '@/hooks/useOptimisticMatch'
 import { ScoreSheetView } from './ScoreSheetView'
 import { ThrowRecorder } from './ThrowRecorder'
@@ -68,22 +69,14 @@ export function SheetMatchBoard({ match, watchMode = false, canDiscard = false }
   const matchState = useMatch(optimisticMatch)
   const sheet = useScoreSheet(optimisticMatch)
 
-  // SSEイベント: 他ユーザーの投擲を受信したらAPIから最新データを取得してローカル更新
-  // isPending 中（自分の投擲が処理中）はスキップ：楽観的更新が古いデータで上書きされるのを防ぐ
+  // SSEイベント: 他ユーザーの投擲を受信したらAPIから最新データを取得してローカル更新。
+  // 自分の投擲処理中（isPending）の競合は fetchLatestForSync 内のガードで防ぐ。
   const handleRealtimeEvent = useCallback(async (_event: RealtimeScoreEvent) => {
-    if (isPendingRef.current) return
-    try {
-      const res = await fetch(`/api/matches/${match.shareCode}`, { cache: 'no-store' })
-      if (res.ok) {
-        const json = await res.json()
-        if (json.data) {
-          syncFromServer(toMatchData(json.data))
-          return
-        }
-      }
-    } catch {
-      // fetch失敗は無視（次のポーリングまたはSSEで回復）
-    }
+    const fresh = await fetchLatestForSync({
+      shareCode: match.shareCode,
+      isPending: () => isPendingRef.current,
+    })
+    if (fresh) syncFromServer(fresh)
   }, [match.shareCode, syncFromServer])
 
   const { status: connStatus } = useRealtimeScore({
