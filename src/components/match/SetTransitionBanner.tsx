@@ -60,6 +60,7 @@ export function SetTransitionBanner({ shareCode, info, watchMode = false }: SetT
           <Button
             variant="primary"
             isLoading={isLoading}
+            disabled={isLoading}
             onClick={handleNextSet}
           >
             次のゲームへ

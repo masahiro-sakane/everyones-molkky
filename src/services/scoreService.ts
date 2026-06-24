@@ -126,14 +126,25 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
     // 制限超過チェック（通常勝利がない場合のみ）
     let limitWinnerId: string | null = null
     if (!winnerId) {
-      const completedRounds = Math.floor(currentTurn.turnNumber / teamCount)
+      // 失格チームをスキップするとturnNumberが飛ぶため、
+      // チームごとの投擲数で「全チームが投擲完了したラウンド」を数える
+      const activeTeamCount = activeTeams.length > 0 ? activeTeams.length : teamCount
+      const throwsPerActiveTeam = new Map<string, number>()
+      for (const ts of updatedTeamScores) {
+        if (!ts.isDisqualified) throwsPerActiveTeam.set(ts.teamId, 0)
+      }
+      // 現在のターンが「このラウンドの最後の投擲」かどうか:
+      // 次ターンに移る前なので、現チームがこのラウンドの最後かを turnNumber で判定
+      // turnNumber を activeTeamCount で割り切れる = 1ラウンド完了
+      const isRoundComplete = activeTeamCount > 0 && currentTurn.turnNumber % activeTeamCount === 0
+      const completedRounds = isRoundComplete ? Math.floor(currentTurn.turnNumber / activeTeamCount) : 0
 
       // ターン制限チェック：1ラウンド（全チームが1回ずつ投擲）完了後に判定
       if (
         match.limitType === 'TURNS' &&
         match.turnLimit !== null &&
         match.turnLimit !== undefined &&
-        currentTurn.turnNumber % teamCount === 0 &&
+        isRoundComplete &&
         completedRounds >= match.turnLimit
       ) {
         // 失格していないチームを優先、全員失格なら全チームを対象にする
@@ -153,7 +164,7 @@ export async function recordThrow(shareCode: string, input: RecordThrowInput) {
         match.timeLimitMinutes !== undefined &&
         match.startedAt !== null &&
         match.startedAt !== undefined &&
-        currentTurn.turnNumber % teamCount === 0
+        isRoundComplete
       ) {
         const elapsedMs = Date.now() - new Date(match.startedAt).getTime()
         const elapsedMinutes = elapsedMs / 1000 / 60
@@ -245,20 +256,25 @@ export async function updateThrow(shareCode: string, throwId: string, input: Upd
     const currentSet = match.sets[0]
     if (!currentSet) throw new Error('進行中のセットがありません')
 
-    // 対象の投擲を取得
-    const targetThrow = await tx.throw.findUnique({ where: { id: throwId } })
+    // 対象の投擲を取得し、現在のセットに属することを確認
+    const targetThrow = await tx.throw.findUnique({
+      where: { id: throwId },
+      include: { turn: true },
+    })
     if (!targetThrow) throw new Error('投擲が見つかりません')
+    if (targetThrow.turn.setId !== currentSet.id) {
+      throw new Error('この投擲は現在のセットに属していません')
+    }
 
-    const newScore = calculateThrowScore(validated.skittlesKnocked)
+    // フォルト時はeffectiveScore=0なのでスコアはそのまま0
+    const newScore = targetThrow.isFault ? 0 : calculateThrowScore(validated.skittlesKnocked)
 
-    // 投擲レコードを更新
+    // 投擲レコードを更新（faultType は変更しない）
     await tx.throw.update({
       where: { id: throwId },
       data: {
         skittlesKnocked: validated.skittlesKnocked,
         score: newScore,
-        isFault: false,
-        faultType: null,
       },
     })
 

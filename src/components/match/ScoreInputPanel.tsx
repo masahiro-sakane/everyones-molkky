@@ -70,8 +70,11 @@ function ScoreInputPanelInner({
   const handleMiss = () => {
     if (disabled || isLoading) return
     setSelected(null)
-    onMiss?.()
-    onConfirm([])
+    if (onMiss) {
+      onMiss()
+    } else {
+      onConfirm([])
+    }
   }
 
   const previewScore = selected ?? 0

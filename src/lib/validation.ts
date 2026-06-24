@@ -71,10 +71,14 @@ export const recordThrowSchema = z.object({
     .array(skittleNumberSchema)
     .max(12, '倒せるスキットルは12本以下です')
     .refine((arr) => {
+      // 0（センチネル）と1-12の番号を混在させない
+      const hasZero = arr.includes(0)
+      const hasNonZero = arr.some((v) => v > 0)
+      if (hasZero && hasNonZero) return false
       // 0 を含まない場合のみ番号の重複を禁止
-      if (arr.includes(0)) return true
-      return new Set(arr).size === arr.length
-    }, '同じスキットル番号を重複して指定することはできません'),
+      if (!hasZero) return new Set(arr).size === arr.length
+      return true
+    }, 'スキットル番号と複数本モードの入力を混在させることはできません'),
   faultType: z.enum(['MISS', 'DROP', 'STEP_OVER', 'WRONG_ORDER']).nullable().optional(),
 })
 
@@ -84,9 +88,12 @@ export const updateThrowSchema = z.object({
     .array(skittleNumberSchema)
     .max(12, '倒せるスキットルは12本以下です')
     .refine((arr) => {
-      if (arr.includes(0)) return true
-      return new Set(arr).size === arr.length
-    }, '同じスキットル番号を重複して指定することはできません'),
+      const hasZero = arr.includes(0)
+      const hasNonZero = arr.some((v) => v > 0)
+      if (hasZero && hasNonZero) return false
+      if (!hasZero) return new Set(arr).size === arr.length
+      return true
+    }, 'スキットル番号と複数本モードの入力を混在させることはできません'),
 })
 
 export type CreateUserInput = z.infer<typeof createUserSchema>

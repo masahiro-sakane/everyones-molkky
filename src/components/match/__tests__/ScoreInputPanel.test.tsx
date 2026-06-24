@@ -101,7 +101,7 @@ describe('ScoreInputPanel', () => {
   })
 
   describe('ミス', () => {
-    it('ミスボタンで onConfirm([]) と onMiss が呼ばれる', async () => {
+    it('onMiss が渡されている場合はミスボタンで onMiss のみ呼ばれる', async () => {
       const onConfirm = vi.fn()
       const onMiss = vi.fn()
       render(
@@ -112,8 +112,16 @@ describe('ScoreInputPanel', () => {
         />
       )
       await userEvent.click(screen.getByTestId('miss-button'))
+      // onMiss が渡されている場合は onMiss のみ呼ばれ、onConfirm は呼ばれない
+      expect(onMiss).toHaveBeenCalledOnce()
+      expect(onConfirm).not.toHaveBeenCalled()
+    })
+
+    it('onMiss が未渡しの場合はミスボタンで onConfirm([]) が呼ばれる', async () => {
+      const onConfirm = vi.fn()
+      render(<ScoreInputPanel isFirstThrow={false} onConfirm={onConfirm} />)
+      await userEvent.click(screen.getByTestId('miss-button'))
       expect(onConfirm).toHaveBeenCalledWith([])
-      expect(onMiss).toHaveBeenCalled()
     })
   })
 

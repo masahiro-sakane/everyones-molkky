@@ -101,9 +101,12 @@ export function processThrow(params: ProcessThrowParams): ThrowResult {
     effectiveScore
   )
 
+  // ルール：失格時はそのセットの得点を0にリセット
+  const finalScore = isDisqualified ? 0 : newScore
+
   return {
     score: effectiveScore,
-    totalScore: newScore,
+    totalScore: finalScore,
     consecutiveMisses: newConsecutiveMisses,
     isDisqualified,
     isWinner,

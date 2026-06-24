@@ -291,12 +291,14 @@ export function useMatch(match: MatchData) {
     }
   }, [match.status, match.sets, match.totalSets, match.matchTeams])
 
-  // 現在の経過ラウンド数（全チームが1回ずつ投擲したラウンド）
+  // 現在の経過ラウンド数（アクティブチームが1回ずつ投擲したラウンド）
+  // 失格チームがいるとturnNumberが飛ぶため、アクティブチーム数で割る
   const currentRound = useMemo(() => {
     const latestTurnNumber = currentSet?.turns.at(-1)?.turnNumber ?? 0
-    const teamCount = match.matchTeams.length
-    return teamCount > 0 ? Math.floor(latestTurnNumber / teamCount) : 0
-  }, [currentSet, match.matchTeams.length])
+    const activeTeamCount = teamScores.filter((t) => !t.isDisqualified).length
+    const effectiveCount = activeTeamCount > 0 ? activeTeamCount : match.matchTeams.length
+    return effectiveCount > 0 ? Math.floor(latestTurnNumber / effectiveCount) : 0
+  }, [currentSet, teamScores, match.matchTeams.length])
 
   // 残りターン数（ターン制限の場合）
   const remainingRounds = useMemo(() => {

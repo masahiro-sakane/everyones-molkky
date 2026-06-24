@@ -280,7 +280,7 @@ export function useScoreSheet(match: MatchData): ScoreSheetData {
           rowWinner = derived.isWinner
           rowReset = derived.hasReset
 
-          if (throwAtRow.score === 0 && !throwAtRow.isFault) {
+          if (throwAtRow.score === 0) {
             const newMisses = prevMisses + 1
             consecutiveMissesByTeam.set(col.teamId, newMisses)
             if (newMisses >= MAX_CONSECUTIVE_MISSES) {

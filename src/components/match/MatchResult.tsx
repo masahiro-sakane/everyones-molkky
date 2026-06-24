@@ -56,7 +56,7 @@ export function MatchResult({ winnerTeamId, teams, shareCode }: MatchResultProps
         {others.map((team, index) => (
           <div key={team.teamId} className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
-              <Badge variant="default">{index + 2}位</Badge>
+              <Badge variant="default">{index + (isDraw ? 1 : 2)}位</Badge>
               <span className="text-sm text-neutral-700">{team.teamName}</span>
               {team.isDisqualified && (
                 <Badge variant="danger">失格</Badge>
