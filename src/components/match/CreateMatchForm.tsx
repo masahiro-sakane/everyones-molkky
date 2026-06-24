@@ -157,7 +157,7 @@ export function CreateMatchForm({ teams, users }: CreateMatchFormProps) {
   const [totalSets, setTotalSets] = useState(2)
 
   // 共通：制限ルール
-  const [limitType, setLimitType] = useState<LimitType>('NONE')
+  const [limitType, setLimitType] = useState<LimitType>('TURNS')
   const [turnLimit, setTurnLimit] = useState(12)
   const [timeLimitMinutes, setTimeLimitMinutes] = useState(20)
 
